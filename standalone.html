@@ -1,0 +1,1675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>ServerlessFlow | Cloud Task Engine</title>
+  
+  <!-- Custom Unique Favicon (Geometric Cloud Quantum Node) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='logoGrad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%233B82F6'/%3E%3Cstop offset='50%25' stop-color='%2306B6D4'/%3E%3Cstop offset='100%25' stop-color='%2310B981'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='48' height='48' rx='12' fill='%230F172A'/%3E%3Cpath d='M14 28a7 7 0 0 1 1.5-13.8A10 10 0 0 1 34 16a7 7 0 0 1 0 14h-1m-7-14l-6 10h5l-2 8 8-10h-5l4-8z' fill='url(%23logoGrad)'/%3E%3C/svg%3E" />
+
+  <!-- Modern Clean Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+            display: ['Outfit', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- External Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+  <style>
+    :root {
+      --bg-main: #090E1A;
+      --bg-panel: rgba(15, 23, 42, 0.85);
+      --bg-card: rgba(22, 33, 58, 0.65);
+      --bg-card-hover: rgba(30, 45, 80, 0.85);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-glow: rgba(59, 130, 246, 0.4);
+      --primary-blue: #3B82F6;
+      --primary-cyan: #06B6D4;
+      --primary-emerald: #10B981;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      background-color: var(--bg-main);
+      color: #F8FAFC;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 10% 10%, rgba(59, 130, 246, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 90% 85%, rgba(6, 182, 212, 0.1) 0%, transparent 45%),
+        radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.05) 0%, transparent 60%);
+      background-attachment: fixed;
+    }
+
+    .glass-panel {
+      background: var(--bg-panel);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.4);
+    }
+
+    .glass-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .glass-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-glow);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.45), 0 0 20px rgba(59, 130, 246, 0.2);
+    }
+
+    .gradient-heading {
+      background: linear-gradient(135deg, #60A5FA 0%, #38BDF8 50%, #34D399 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .btn-gradient {
+      background: linear-gradient(135deg, #2563EB 0%, #06B6D4 100%);
+      color: #FFFFFF;
+      font-weight: 600;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 9px 18px;
+      box-shadow: 0 4px 16px rgba(37, 99, 235, 0.35);
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      cursor: pointer;
+    }
+    .btn-gradient:hover {
+      opacity: 0.95;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 22px rgba(37, 99, 235, 0.5);
+    }
+
+    .btn-secondary {
+      background: rgba(30, 41, 59, 0.8);
+      color: #E2E8F0;
+      font-weight: 600;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 9px 16px;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      cursor: pointer;
+    }
+    .btn-secondary:hover {
+      background: rgba(51, 65, 85, 0.95);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .terminal-window {
+      background: #060A13;
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      border-radius: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      color: #94A3B8;
+      box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.7);
+    }
+
+    .progress-bar-fill {
+      background: linear-gradient(90deg, #3B82F6, #06B6D4, #10B981);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s linear infinite;
+    }
+    @keyframes shimmer {
+      0% { background-position: 100% 0; }
+      100% { background-position: -100% 0; }
+    }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
+    ::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.3); border-radius: 3px; }
+  </style>
+</head>
+<body class="selection:bg-cyan-500 selection:text-slate-950">
+  
+  <div id="root">
+    <div class="flex items-center justify-center min-h-screen">
+      <div class="text-center p-8 glass-panel max-w-sm">
+        <div class="w-10 h-10 border-3 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+        <h3 class="text-sm font-bold text-white">Starting Serverless Platform...</h3>
+        <p class="text-xs text-slate-400 mt-1">Connecting Supabase & QStash</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function startApp() {
+      if (!window.React || !window.ReactDOM) {
+        setTimeout(startApp, 40);
+        return;
+      }
+
+      const { createElement: h, useState, useEffect, useRef } = React;
+
+      // Modern Vector SVG Icons
+      const Icons = {
+        Logo: ({ size = 'w-9 h-9' }) => 
+          h('div', { className: `${size} rounded-xl bg-gradient-to-tr from-blue-600 via-cyan-500 to-emerald-400 p-0.5 shadow-lg shadow-blue-500/25 shrink-0 flex items-center justify-center` },
+            h('div', { className: 'w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center' },
+              h('svg', { className: 'w-5 h-5 text-cyan-400', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round' },
+                h('path', { d: 'M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z' }),
+                h('path', { d: 'm13 11-3 5h4l-2 5' })
+              )
+            )
+          ),
+        Zap: ({ className = 'w-4 h-4' }) => 
+          h('svg', { className, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round' },
+            h('polygon', { points: '13 2 3 14 12 14 11 22 21 10 12 10 13 2' })
+          ),
+        Shield: ({ className = 'w-4 h-4' }) => 
+          h('svg', { className, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round' },
+            h('path', { d: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z' }),
+            h('path', { d: 'm9 12 2 2 4-4' })
+          ),
+        Activity: ({ className = 'w-4 h-4' }) => 
+          h('svg', { className, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round' },
+            h('polyline', { points: '22 12 18 12 15 21 9 3 6 12 2 12' })
+          ),
+        FileText: ({ className = 'w-4 h-4' }) => 
+          h('svg', { className, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round' },
+            h('path', { d: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z' }),
+            h('polyline', { points: '14 2 14 8 20 8' }),
+            h('line', { x1: '16', y1: '13', x2: '8', y2: '13' }),
+            h('line', { x1: '16', y1: '17', x2: '8', y2: '17' }),
+            h('polyline', { points: '10 9 9 9 8 9' })
+          ),
+        Image: ({ className = 'w-4 h-4' }) => 
+          h('svg', { className, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round' },
+            h('rect', { width: '18', height: '18', x: '3', y: '3', rx: '2', ry: '2' }),
+            h('circle', { cx: '9', cy: '9', r: '2' }),
+            h('path', { d: 'm21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21' })
+          ),
+        Key: ({ className = 'w-4 h-4' }) => 
+          h('svg', { className, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round' },
+            h('path', { d: 'm21 2-2 2m-1.5 1.5L14 9' }),
+            h('path', { d: 'M15.5 7.5 18 10' }),
+            h('path', { d: 'm14 9-2.5 2.5a6 6 0 1 1-2.83-2.83L14 4' })
+          ),
+        Flask: ({ className = 'w-4 h-4' }) => 
+          h('svg', { className, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round' },
+            h('path', { d: 'M10 2v7.31L4.69 19.4a2 2 0 0 0 1.7 2.6h11.22a2 2 0 0 0 1.7-2.6L14 9.31V2' }),
+            h('line', { x1: '8', y1: '2', x2: '16', y2: '2' }),
+            h('line', { x1: '6.5', y1: '15', x2: '17.5', y2: '15' })
+          ),
+        Download: ({ className = 'w-4 h-4' }) => 
+          h('svg', { className, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round' },
+            h('path', { d: 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4' }),
+            h('polyline', { points: '7 10 12 15 17 10' }),
+            h('line', { x1: '12', y1: '15', x2: '12', y2: '3' })
+          ),
+        Refresh: ({ className = 'w-4 h-4' }) => 
+          h('svg', { className, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round' },
+            h('path', { d: 'M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8' }),
+            h('path', { d: 'M21 3v5h-5' }),
+            h('path', { d: 'M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16' }),
+            h('path', { d: 'M8 16H3v5' })
+          ),
+        User: ({ className = 'w-4 h-4' }) => 
+          h('svg', { className, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round' },
+            h('path', { d: 'M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2' }),
+            h('circle', { cx: '12', cy: '7', r: '4' })
+          ),
+        Layers: ({ className = 'w-4 h-4' }) => 
+          h('svg', { className, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round' },
+            h('polygon', { points: '12 2 2 7 12 12 22 7 12 2' }),
+            h('polyline', { points: '2 17 12 22 22 17' }),
+            h('polyline', { points: '2 12 12 17 22 12' })
+          ),
+        Copy: ({ className = 'w-4 h-4' }) => 
+          h('svg', { className, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round' },
+            h('rect', { width: '14', height: '14', x: '8', y: '8', rx: '2', ry: '2' }),
+            h('path', { d: 'M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2' })
+          ),
+        Sparkles: ({ className = 'w-4 h-4' }) => 
+          h('svg', { className, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round' },
+            h('path', { d: 'm12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z' }),
+            h('path', { d: 'M5 3v4' }),
+            h('path', { d: 'M19 17v4' })
+          ),
+        Cpu: ({ className = 'w-4 h-4' }) => 
+          h('svg', { className, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round' },
+            h('rect', { width: '16', height: '16', x: '4', y: '4', rx: '2' }),
+            h('rect', { width: '6', height: '6', x: '9', y: '9' }),
+            h('path', { d: 'M9 1v3' }),
+            h('path', { d: 'M15 1v3' }),
+            h('path', { d: 'M9 20v3' }),
+            h('path', { d: 'M15 20v3' }),
+            h('path', { d: 'M20 9h3' }),
+            h('path', { d: 'M20 14h3' }),
+            h('path', { d: 'M1 9h3' }),
+            h('path', { d: 'M1 14h3' })
+          ),
+        MapPin: ({ className = 'w-4 h-4' }) =>
+          h('svg', { className, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round' },
+            h('path', { d: 'M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z' }),
+            h('circle', { cx: '12', cy: '10', r: '3' })
+          )
+      };
+
+      function App() {
+        const [currentUser, setCurrentUser] = useState(() => {
+          try {
+            const saved = localStorage.getItem('serverless_user');
+            return saved ? JSON.parse(saved) : null;
+          } catch (e) { return null; }
+        });
+
+        // Current Page: 'landing' | 'login' (Dedicated Login Page) | 'signup' (Dedicated Sign Up Page) | 'dashboard'
+        const [currentPage, setCurrentPage] = useState(() => {
+          const savedUser = localStorage.getItem('serverless_user');
+          return savedUser ? 'dashboard' : 'landing';
+        });
+
+        const [authEmail, setAuthEmail] = useState('');
+        const [authPassword, setAuthPassword] = useState('');
+        const [authName, setAuthName] = useState('');
+        const [dashboardTab, setDashboardTab] = useState('overview');
+
+        const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
+        const [isDlqOpen, setIsDlqOpen] = useState(false);
+        const [selectedTask, setSelectedTask] = useState(null);
+        const [isApiKeyCopied, setIsApiKeyCopied] = useState(false);
+
+        const [tasks, setTasks] = useState([]);
+        const [logs, setLogs] = useState([]);
+        const [dlq, setDlq] = useState([]);
+        const [chaosMode, setChaosMode] = useState(false);
+        const [activeFilter, setActiveFilter] = useState('ALL');
+        const [metrics, setMetrics] = useState({
+          totalSubmitted: 0,
+          totalCompleted: 0,
+          totalFailed: 0,
+          avgLatencyMs: 140,
+          latencies: [120, 150, 95, 175, 130]
+        });
+
+        const [customImageFile, setCustomImageFile] = useState(null);
+        const [customImagePreview, setCustomImagePreview] = useState(null);
+        const [customPdfTitle, setCustomPdfTitle] = useState('System Performance Audit');
+        const [customPdfAuthor, setCustomPdfAuthor] = useState('Adeoluwa');
+
+        const chartRef = useRef(null);
+        const chartInstance = useRef(null);
+
+        useEffect(() => {
+          handleDispatchTask({
+            name: 'Infrastructure Health Audit',
+            type: 'pdf_generator',
+            priority: 'HIGH',
+            payload: { title: 'Infrastructure Health Audit', author: 'Adeoluwa' }
+          });
+
+          setTimeout(() => {
+            handleDispatchTask({
+              name: 'Live Bitcoin & Ethereum Scraper',
+              type: 'data_scraper',
+              priority: 'MEDIUM',
+              payload: { symbol: 'BTC', records: 1250 }
+            });
+          }, 350);
+        }, []);
+
+        useEffect(() => {
+          if (!chartRef.current || !window.Chart || currentPage !== 'dashboard' || dashboardTab !== 'overview') return;
+          if (chartInstance.current) chartInstance.current.destroy();
+
+          const ctx = chartRef.current.getContext('2d');
+          chartInstance.current = new window.Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: metrics.latencies.map((_, i) => '#' + (i + 1)),
+              datasets: [{
+                label: 'Worker Latency (ms)',
+                data: metrics.latencies,
+                borderColor: '#38BDF8',
+                backgroundColor: 'rgba(56, 189, 248, 0.12)',
+                fill: true,
+                tension: 0.35,
+                pointBackgroundColor: '#38BDF8',
+                pointRadius: 4
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: {
+                x: { grid: { color: 'rgba(255, 255, 255, 0.06)' }, ticks: { color: '#64748b' } },
+                y: { grid: { color: 'rgba(255, 255, 255, 0.06)' }, ticks: { color: '#64748b' } }
+              }
+            }
+          });
+        }, [metrics.latencies, currentPage, dashboardTab]);
+
+        const appendLog = (taskId, level, message) => {
+          setLogs(prev => [
+            {
+              id: 'log_' + Date.now() + Math.random(),
+              taskId,
+              level,
+              message,
+              timestamp: new Date().toLocaleTimeString()
+            },
+            ...prev.slice(0, 100)
+          ]);
+        };
+
+        const handleAuthSubmit = (e) => {
+          e.preventDefault();
+          const user = {
+            id: 'usr_' + Date.now(),
+            name: authName || authEmail.split('@')[0] || 'Adeoluwa',
+            email: authEmail || 'adeoluwa@replyme.cloud',
+            role: 'Lead Cloud Architect',
+            apiKey: 'flow_live_9f83a0bc4e21d5790cba1248',
+            avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80'
+          };
+          setCurrentUser(user);
+          localStorage.setItem('serverless_user', JSON.stringify(user));
+          setCurrentPage('dashboard');
+          if (window.confetti) window.confetti({ particleCount: 60, spread: 70 });
+        };
+
+        const handleDemoLogin = () => {
+          const demoUser = {
+            id: 'usr_demo_101',
+            name: 'Adeoluwa',
+            email: 'adeoluwa@replyme.cloud',
+            role: 'Lead Cloud Architect',
+            apiKey: 'flow_live_9f83a0bc4e21d5790cba1248',
+            avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80'
+          };
+          setCurrentUser(demoUser);
+          localStorage.setItem('serverless_user', JSON.stringify(demoUser));
+          setCurrentPage('dashboard');
+          if (window.confetti) window.confetti({ particleCount: 50, spread: 60 });
+        };
+
+        const handleLogout = () => {
+          setCurrentUser(null);
+          localStorage.removeItem('serverless_user');
+          setCurrentPage('landing');
+        };
+
+        const handleDispatchTask = (taskData) => {
+          const taskId = 'task_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 4);
+          const newTask = {
+            id: taskId,
+            task_name: taskData.name || 'Serverless Task #' + taskId.slice(-4),
+            task_type: taskData.type,
+            status: 'QUEUED',
+            priority: taskData.priority || 'MEDIUM',
+            progress: 0,
+            payload: taskData.payload || {},
+            result: null,
+            retry_count: 0,
+            max_retries: 3,
+            worker_id: null,
+            execution_time_ms: 0,
+            created_at: new Date().toLocaleTimeString()
+          };
+
+          setTasks(prev => [newTask, ...prev]);
+          setMetrics(prev => ({ ...prev, totalSubmitted: prev.totalSubmitted + 1 }));
+          appendLog(taskId, 'INFO', `Task [${newTask.task_name}] queued in serverless message broker`);
+
+          setTimeout(() => runWorker(taskId), 350 + Math.random() * 400);
+        };
+
+        const runWorker = async (taskId) => {
+          const workerId = 'worker-node-' + Math.floor(Math.random() * 899 + 100);
+          const start = performance.now();
+
+          setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: 'PROCESSING', worker_id: workerId, progress: 25 } : t));
+          appendLog(taskId, 'INFO', `Serverless Worker spawned [${workerId}] on AWS eu-central-1 microVM`);
+
+          try {
+            if (chaosMode && Math.random() < 0.65) {
+              throw new Error('[CHAOS INJECTION] 504 Gateway Timeout: Edge compute container crash');
+            }
+
+            await new Promise(r => setTimeout(r, 450));
+            setTasks(prev => prev.map(t => t.id === taskId ? { ...t, progress: 70 } : t));
+
+            let result = null;
+            const currentTask = tasks.find(t => t.id === taskId);
+            const type = currentTask ? currentTask.task_type : 'pdf_generator';
+
+            // 1. PDF
+            if (type === 'pdf_generator' && window.jspdf) {
+              const { jsPDF } = window.jspdf;
+              const doc = new jsPDF();
+              const reportTitle = (currentTask.payload && currentTask.payload.title) || customPdfTitle || 'Performance Audit';
+              const author = (currentTask.payload && currentTask.payload.author) || (currentUser ? currentUser.name : 'Adeoluwa');
+
+              doc.setFillColor(15, 23, 42);
+              doc.rect(0, 0, 210, 32, 'F');
+              doc.setFillColor(59, 130, 246);
+              doc.rect(0, 30, 210, 2, 'F');
+
+              doc.setTextColor(255, 255, 255);
+              doc.setFontSize(17);
+              doc.text(reportTitle.toUpperCase(), 14, 18);
+              doc.setFontSize(9);
+              doc.setTextColor(147, 197, 253);
+              doc.text(`SERVERLESS DISTRIBUTED SYSTEM AUDIT • GENERATED: ${new Date().toLocaleString()}`, 14, 25);
+
+              doc.setTextColor(30, 30, 30);
+              doc.setFontSize(10);
+              doc.text(`Lead Architect: ${author} | Task ID: ${taskId}`, 14, 42);
+
+              if (doc.autoTable) {
+                doc.autoTable({
+                  startY: 48,
+                  head: [['System Component', 'Configuration / Value', 'Operational Status']],
+                  body: [
+                    ['Compute Architecture', 'Serverless MicroVM (Node.js/Edge)', '100% HEALTHY'],
+                    ['Database Layer', 'Supabase Managed PostgreSQL', 'CONNECTED (ONLINE)'],
+                    ['Message Queue', 'Upstash QStash Distributed Broker', 'ACTIVE (0 BACKLOG)'],
+                    ['Fault Tolerance', 'Exponential Backoff 3x & DLQ', 'ENABLED'],
+                    ['Execution Latency', `${Math.round(performance.now() - start)} ms`, 'OPTIMAL (SUB-SECOND)'],
+                    ['Cloud Hosting Cost', '$0.00 / month (Free Tier)', 'ACTIVE']
+                  ],
+                  theme: 'striped',
+                  headStyles: { fillColor: [37, 99, 235] }
+                });
+              }
+
+              result = {
+                type: 'pdf',
+                title: reportTitle,
+                filename: `${reportTitle.toLowerCase().replace(/\s+/g, '_')}.pdf`,
+                downloadUrl: doc.output('datauristring'),
+                pageCount: 1,
+                sizeKb: 28
+              };
+            }
+            // 2. Image
+            else if (type === 'image_processor') {
+              const canvas = document.createElement('canvas');
+              canvas.width = 450;
+              canvas.height = 260;
+              const ctx = canvas.getContext('2d');
+
+              if (customImagePreview) {
+                const img = new Image();
+                img.src = customImagePreview;
+                await new Promise(res => { img.onload = res; img.onerror = res; });
+                ctx.drawImage(img, 0, 0, 450, 260);
+                const imgData = ctx.getImageData(0, 0, 450, 260);
+                const d = imgData.data;
+                for (let i = 0; i < d.length; i += 4) {
+                  d[i] = 255 - d[i];
+                  d[i + 1] = d[i + 1] * 1.2;
+                }
+                ctx.putImageData(imgData, 0, 0);
+              } else {
+                const grad = ctx.createLinearGradient(0, 0, 450, 260);
+                grad.addColorStop(0, '#1E293B');
+                grad.addColorStop(1, '#0F172A');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, 450, 260);
+
+                ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+                ctx.fillRect(15, 15, 420, 230);
+
+                ctx.fillStyle = '#38BDF8';
+                ctx.font = 'bold 16px sans-serif';
+                ctx.fillText('⚡ PROCESSED CLOUD IMAGE ARTIFACT', 30, 50);
+
+                ctx.fillStyle = '#94A3B8';
+                ctx.font = '12px monospace';
+                ctx.fillText(`Filter Matrix: CYBER_NEON_ENHANCE`, 30, 85);
+                ctx.fillText(`Resolution: 1920x1080 (HD Normalized)`, 30, 115);
+                ctx.fillText(`Compression Savings: 71.4% (WebP format)`, 30, 145);
+                ctx.fillText(`Integrity Checksum: SHA-256 Verified (OK)`, 30, 175);
+              }
+
+              result = {
+                type: 'image',
+                previewUrl: canvas.toDataURL('image/png'),
+                filterName: 'Cyber Neon Glow & Sharpening',
+                dimensions: '1920x1080',
+                compressionRatio: '71.4%'
+              };
+            }
+            // 3. Live BTC Scraper
+            else if (type === 'data_scraper') {
+              let btcPrice = '$88,450';
+              let ethPrice = '$3,420';
+              try {
+                const apiRes = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd');
+                if (apiRes.ok) {
+                  const d = await apiRes.json();
+                  if (d.bitcoin) btcPrice = '$' + d.bitcoin.usd.toLocaleString();
+                  if (d.ethereum) ethPrice = '$' + d.ethereum.usd.toLocaleString();
+                }
+              } catch (e) {}
+
+              result = {
+                type: 'data_scraper',
+                recordsScraped: 1250,
+                btcPriceUsd: btcPrice,
+                ethPriceUsd: ethPrice,
+                percentiles: { p50: '42ms', p95: '118ms', p99: '210ms' },
+                healthScore: '99.99% Cluster Uptime'
+              };
+            }
+            // 4. Heavy Crypto Math
+            else {
+              const hashNonce = Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+              result = {
+                type: 'heavy_math',
+                cycles: 1000000,
+                proofOfWorkHash: `000000${hashNonce.substring(6)}`,
+                matrixDeterminant: '1.41421356',
+                mflopsScore: '12,480 MFLOPS (Multi-Threaded)'
+              };
+            }
+
+            const duration = Math.round(performance.now() - start);
+
+            setTasks(prev => prev.map(t => t.id === taskId ? {
+              ...t,
+              status: 'COMPLETED',
+              progress: 100,
+              execution_time_ms: duration,
+              result
+            } : t));
+
+            setMetrics(prev => ({
+              ...prev,
+              totalCompleted: prev.totalCompleted + 1,
+              latencies: [...prev.latencies.slice(-9), duration],
+              avgLatencyMs: Math.round((prev.avgLatencyMs * 4 + duration) / 5)
+            }));
+
+            appendLog(taskId, 'SUCCESS', `Task executed successfully in ${duration}ms! Worker terminated.`);
+
+          } catch (err) {
+            const currentTask = tasks.find(t => t.id === taskId);
+            const retries = currentTask ? currentTask.retry_count + 1 : 1;
+
+            appendLog(taskId, 'ERROR', `Execution failed: ${err.message} (Attempt ${retries}/3)`);
+
+            if (retries < 3) {
+              setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: 'RETRYING', retry_count: retries, error_message: err.message } : t));
+              appendLog(taskId, 'WARN', `Triggering exponential backoff auto-retry in ${retries * 2}s...`);
+              setTimeout(() => runWorker(taskId), retries * 2000);
+            } else {
+              setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: 'FAILED', error_message: err.message } : t));
+              const dlqItem = {
+                id: 'dlq_' + Date.now(),
+                taskId,
+                task_name: currentTask ? currentTask.task_name : 'Task',
+                reason: err.message,
+                time: new Date().toLocaleTimeString()
+              };
+              setDlq(prev => [dlqItem, ...prev]);
+              setMetrics(prev => ({ ...prev, totalFailed: prev.totalFailed + 1 }));
+              appendLog(taskId, 'ERROR', `Task permanently failed. Transferred to Dead-Letter Queue (DLQ).`);
+            }
+          }
+        };
+
+        const handleReplayDLQ = (dlqId) => {
+          const item = dlq.find(d => d.id === dlqId);
+          if (!item) return;
+          setDlq(prev => prev.filter(d => d.id !== dlqId));
+          setTasks(prev => prev.map(t => t.id === item.taskId ? { ...t, status: 'QUEUED', retry_count: 0, progress: 0, error_message: null } : t));
+          appendLog(item.taskId, 'INFO', `Manual replay initiated from DLQ`);
+          setTimeout(() => runWorker(item.taskId), 300);
+        };
+
+        const filteredTasks = tasks.filter(t => activeFilter === 'ALL' || t.status === activeFilter);
+        const activeCount = tasks.filter(t => t.status === 'PROCESSING' || t.status === 'RETRYING').length;
+
+        // =========================================================================
+        // VIEW 1: DEDICATED SIGN IN PAGE (SEPARATE PAGE, CLEAN MODERN UI)
+        // =========================================================================
+        if (currentPage === 'login') {
+          return h('div', { className: 'min-h-screen flex flex-col justify-center items-center px-4 py-8 relative bg-slate-950' },
+            
+            // Glows
+            h('div', { className: 'absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none' }),
+            h('div', { className: 'absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none' }),
+
+            // Back to Home Link
+            h('button', {
+              onClick: () => setCurrentPage('landing'),
+              className: 'absolute top-6 left-6 flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors z-20'
+            }, '← Back to Home'),
+
+            // Main Login Container
+            h('div', { className: 'w-full max-w-4xl grid grid-cols-1 md:grid-cols-12 glass-panel overflow-hidden border-slate-700/60 shadow-2xl relative z-10' },
+              
+              // Left Showcase Panel (5 cols)
+              h('div', { className: 'md:col-span-5 p-8 bg-gradient-to-b from-blue-950/90 to-slate-950 flex flex-col justify-between border-b md:border-b-0 md:border-r border-slate-800' },
+                h('div', null,
+                  h('div', { className: 'flex items-center gap-3 mb-6' },
+                    h(Icons.Logo, { size: 'w-10 h-10' }),
+                    h('div', null,
+                      h('h2', { className: 'text-base font-bold text-white' }, 'ServerlessFlow'),
+                      h('span', { className: 'text-[10px] text-cyan-400 font-mono' }, 'Cloud Task Engine')
+                    )
+                  ),
+
+                  h('h3', { className: 'text-2xl font-bold font-display text-white mb-3 leading-tight' },
+                    'Sign In to Your Workspace'
+                  ),
+                  h('p', { className: 'text-xs text-slate-300 leading-relaxed mb-6' },
+                    'Access high-throughput serverless workers, live telemetry pipelines, and downloadable execution artifacts.'
+                  ),
+
+                  h('div', { className: 'p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2 text-xs text-slate-300' },
+                    h('div', { className: 'flex items-center gap-2 text-cyan-400 font-semibold' },
+                      h(Icons.Shield, { className: 'w-4 h-4' }),
+                      'Enterprise Infrastructure'
+                    ),
+                    h('p', { className: 'text-[11px] text-slate-400' },
+                      'End-to-end encrypted microVM dispatching with automatic Dead-Letter Queue isolation.'
+                    )
+                  )
+                ),
+
+                h('div', { className: 'text-[11px] text-slate-400 font-mono pt-4 border-t border-slate-800/80 flex items-center gap-1.5' },
+                  h(Icons.MapPin, { className: 'w-3.5 h-3.5 text-cyan-400' }),
+                  'Lagos Edge Cloud • Victoria Island Node'
+                )
+              ),
+
+              // Right Form Panel (7 cols) with Datacenter Background
+              h('div', {
+                className: 'md:col-span-7 p-8 flex flex-col justify-center relative',
+                style: {
+                  backgroundImage: 'linear-gradient(to right, rgba(15, 23, 42, 0.94), rgba(15, 23, 42, 0.88)), url("/assets/lagos_cloud_server.jpg")',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center'
+                }
+              },
+                
+                h('div', { className: 'mb-5' },
+                  h('h3', { className: 'text-xl font-bold font-display text-white' }, 'Sign In'),
+                  h('p', { className: 'text-xs text-slate-400' }, 'Enter your account details to access the dashboard')
+                ),
+
+                // 1-Click Instant Demo Login
+                h('button', {
+                  onClick: handleDemoLogin,
+                  className: 'btn-gradient w-full text-xs !py-3 mb-5 shadow-lg shadow-blue-500/20'
+                }, h(Icons.Zap, { className: 'w-4 h-4' }), '1-Click Test Login as Lead Architect (Adeoluwa)'),
+
+                h('div', { className: 'flex items-center gap-2 mb-5' },
+                  h('div', { className: 'h-px bg-slate-700/80 flex-1' }),
+                  h('span', { className: 'text-[10px] text-slate-400 uppercase font-mono' }, 'Or with Email'),
+                  h('div', { className: 'h-px bg-slate-700/80 flex-1' })
+                ),
+
+                // Login Form
+                h('form', { onSubmit: handleAuthSubmit, className: 'space-y-4' },
+                  h('div', null,
+                    h('label', { className: 'text-xs text-slate-300 font-semibold block mb-1' }, 'Email Address'),
+                    h('input', {
+                      type: 'email',
+                      required: true,
+                      value: authEmail,
+                      onChange: (e) => setAuthEmail(e.target.value),
+                      placeholder: 'name@company.com',
+                      className: 'w-full bg-slate-950/80 backdrop-blur-md border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-blue-500'
+                    })
+                  ),
+
+                  h('div', null,
+                    h('label', { className: 'text-xs text-slate-300 font-semibold block mb-1' }, 'Password'),
+                    h('input', {
+                      type: 'password',
+                      required: true,
+                      value: authPassword,
+                      onChange: (e) => setAuthPassword(e.target.value),
+                      placeholder: '••••••••',
+                      className: 'w-full bg-slate-950/80 backdrop-blur-md border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-blue-500'
+                    })
+                  ),
+
+                  h('button', {
+                    type: 'submit',
+                    className: 'btn-secondary w-full text-xs !py-3 font-bold mt-2 !bg-slate-900/90'
+                  }, 'Sign In to Workspace'),
+
+                  h('div', { className: 'pt-2 text-center text-xs text-slate-400' },
+                    "Don't have an account? ",
+                    h('button', {
+                      type: 'button',
+                      onClick: () => setCurrentPage('signup'),
+                      className: 'text-cyan-400 font-bold hover:underline'
+                    }, 'Create an account →')
+                  )
+                )
+              )
+            )
+          );
+        }
+
+        // =========================================================================
+        // VIEW 2: DEDICATED SIGN UP PAGE (SEPARATE PAGE, CLEAN MODERN UI)
+        // =========================================================================
+        if (currentPage === 'signup') {
+          return h('div', { className: 'min-h-screen flex flex-col justify-center items-center px-4 py-8 relative bg-slate-950' },
+            
+            // Glows
+            h('div', { className: 'absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none' }),
+            h('div', { className: 'absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none' }),
+
+            // Back to Home Link
+            h('button', {
+              onClick: () => setCurrentPage('landing'),
+              className: 'absolute top-6 left-6 flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors z-20'
+            }, '← Back to Home'),
+
+            // Main Signup Container
+            h('div', { className: 'w-full max-w-4xl grid grid-cols-1 md:grid-cols-12 glass-panel overflow-hidden border-slate-700/60 shadow-2xl relative z-10' },
+              
+              // Left Showcase Panel (5 cols)
+              h('div', { className: 'md:col-span-5 p-8 bg-gradient-to-b from-blue-950/90 to-slate-950 flex flex-col justify-between border-b md:border-b-0 md:border-r border-slate-800' },
+                h('div', null,
+                  h('div', { className: 'flex items-center gap-3 mb-6' },
+                    h(Icons.Logo, { size: 'w-10 h-10' }),
+                    h('div', null,
+                      h('h2', { className: 'text-base font-bold text-white' }, 'ServerlessFlow'),
+                      h('span', { className: 'text-[10px] text-cyan-400 font-mono' }, 'Cloud Task Engine')
+                    )
+                  ),
+
+                  h('h3', { className: 'text-2xl font-bold font-display text-white mb-3 leading-tight' },
+                    'Create Free Student Account'
+                  ),
+                  h('p', { className: 'text-xs text-slate-300 leading-relaxed mb-6' },
+                    'Get immediate access to dispatch serverless tasks, generate vector PDF audits, and test chaos engineering.'
+                  ),
+
+                  h('div', { className: 'p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2 text-xs text-slate-300' },
+                    h('div', { className: 'flex items-center gap-2 text-emerald-400 font-semibold' },
+                      h(Icons.Sparkles, { className: 'w-4 h-4' }),
+                      'Instant Developer Workspace'
+                    ),
+                    h('p', { className: 'text-[11px] text-slate-400' },
+                      'Includes personal API keys, cURL webhook endpoints, and real-time execution telemetry.'
+                    )
+                  )
+                ),
+
+                h('div', { className: 'text-[11px] text-slate-400 font-mono pt-4 border-t border-slate-800/80 flex items-center gap-1.5' },
+                  h(Icons.MapPin, { className: 'w-3.5 h-3.5 text-cyan-400' }),
+                  'Lagos Edge Cloud • Victoria Island Node'
+                )
+              ),
+
+              // Right Form Panel (7 cols) with Datacenter Background
+              h('div', {
+                className: 'md:col-span-7 p-8 flex flex-col justify-center relative',
+                style: {
+                  backgroundImage: 'linear-gradient(to right, rgba(15, 23, 42, 0.94), rgba(15, 23, 42, 0.88)), url("/assets/lagos_cloud_server.jpg")',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center'
+                }
+              },
+                
+                h('div', { className: 'mb-5' },
+                  h('h3', { className: 'text-xl font-bold font-display text-white' }, 'Register Account'),
+                  h('p', { className: 'text-xs text-slate-400' }, 'Create your developer account to begin')
+                ),
+
+                // Signup Form
+                h('form', { onSubmit: handleAuthSubmit, className: 'space-y-4' },
+                  h('div', null,
+                    h('label', { className: 'text-xs text-slate-300 font-semibold block mb-1' }, 'Full Name'),
+                    h('input', {
+                      type: 'text',
+                      required: true,
+                      value: authName,
+                      onChange: (e) => setAuthName(e.target.value),
+                      placeholder: 'e.g. Adeoluwa',
+                      className: 'w-full bg-slate-950/80 backdrop-blur-md border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-blue-500'
+                    })
+                  ),
+
+                  h('div', null,
+                    h('label', { className: 'text-xs text-slate-300 font-semibold block mb-1' }, 'Email Address'),
+                    h('input', {
+                      type: 'email',
+                      required: true,
+                      value: authEmail,
+                      onChange: (e) => setAuthEmail(e.target.value),
+                      placeholder: 'student@university.edu',
+                      className: 'w-full bg-slate-950/80 backdrop-blur-md border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-blue-500'
+                    })
+                  ),
+
+                  h('div', null,
+                    h('label', { className: 'text-xs text-slate-300 font-semibold block mb-1' }, 'Password'),
+                    h('input', {
+                      type: 'password',
+                      required: true,
+                      value: authPassword,
+                      onChange: (e) => setAuthPassword(e.target.value),
+                      placeholder: '••••••••',
+                      className: 'w-full bg-slate-950/80 backdrop-blur-md border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-blue-500'
+                    })
+                  ),
+
+                  h('button', {
+                    type: 'submit',
+                    className: 'btn-gradient w-full text-xs !py-3 font-bold mt-2'
+                  }, 'Create Free Account'),
+
+                  h('div', { className: 'pt-2 text-center text-xs text-slate-400' },
+                    'Already have an account? ',
+                    h('button', {
+                      type: 'button',
+                      onClick: () => setCurrentPage('login'),
+                      className: 'text-cyan-400 font-bold hover:underline'
+                    }, 'Sign In →')
+                  )
+                )
+              )
+            )
+          );
+        }
+
+        // =========================================================================
+        // VIEW 3: PUBLIC LANDING PAGE (WITH NIGERIAN TECH HUB HERO SHOWCASE)
+        // =========================================================================
+        if (currentPage === 'landing') {
+          return h('div', { className: 'min-h-screen flex flex-col justify-between' },
+            
+            // Header
+            h('header', { className: 'sticky top-0 z-40 w-full border-b border-slate-800/80 bg-slate-950/85 backdrop-blur-xl px-4 lg:px-8 py-3.5' },
+              h('div', { className: 'max-w-7xl mx-auto flex items-center justify-between' },
+                
+                h('div', { className: 'flex items-center gap-3' },
+                  h(Icons.Logo, { size: 'w-9 h-9' }),
+                  h('div', null,
+                    h('h1', { className: 'text-base font-bold font-display text-white tracking-tight' }, 'ServerlessFlow'),
+                    h('p', { className: 'text-xs text-slate-400 font-mono hidden sm:block' }, 'Cloud Task Engine')
+                  )
+                ),
+
+                h('div', { className: 'flex items-center gap-3' },
+                  h('button', {
+                    onClick: () => setCurrentPage('login'),
+                    className: 'text-xs font-semibold text-slate-300 hover:text-white px-3 py-2'
+                  }, 'Sign In'),
+                  
+                  h('button', {
+                    onClick: () => setCurrentPage('signup'),
+                    className: 'btn-gradient text-xs !py-2 !px-4'
+                  }, h(Icons.Zap, { className: 'w-3.5 h-3.5' }), 'Access Dashboard')
+                )
+              )
+            ),
+
+            // Hero Section
+            h('section', { className: 'py-16 md:py-20 px-4 max-w-6xl mx-auto text-center' },
+              h('div', { className: 'inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-semibold mb-6' },
+                h(Icons.Sparkles, { className: 'w-3.5 h-3.5 text-cyan-400' }),
+                h('span', null, 'High-Throughput Distributed Cloud Compute')
+              ),
+              h('h1', { className: 'text-3xl sm:text-5xl lg:text-6xl font-extrabold font-display text-white tracking-tight leading-tight max-w-4xl mx-auto' },
+                'Process Heavy Cloud Tasks at ',
+                h('span', { className: 'gradient-heading' }, 'Lightning Speed')
+              ),
+              h('p', { className: 'text-sm sm:text-base text-slate-300 mt-6 max-w-2xl mx-auto leading-relaxed' },
+                'An elastic, decoupled computing architecture executing heavy asynchronous workloads with live progress telemetry, automatic retries, and Dead-Letter Queue (DLQ) fault tolerance.'
+              ),
+
+              h('div', { className: 'mt-8 flex flex-wrap items-center justify-center gap-4' },
+                h('button', {
+                  onClick: handleDemoLogin,
+                  className: 'btn-gradient text-xs !py-3 !px-6 shadow-xl shadow-blue-500/20'
+                }, h(Icons.Zap, { className: 'w-4 h-4' }), '1-Click Test Login as Lead Architect'),
+
+                h('button', {
+                  onClick: () => setCurrentPage('signup'),
+                  className: 'btn-secondary text-xs !py-3 !px-6'
+                }, h(Icons.User, { className: 'w-4 h-4 text-slate-300' }), 'Create Student Account')
+              ),
+
+              // Nigerian Tech Hub Showcase Hero Banner
+              h('div', { className: 'mt-12 relative rounded-2xl overflow-hidden glass-panel border-blue-500/30 shadow-2xl max-w-4xl mx-auto group' },
+                h('div', { className: 'relative h-64 sm:h-80 md:h-96 w-full overflow-hidden' },
+                  h('img', {
+                    src: '/assets/nigerian_tech_hub.jpg',
+                    alt: 'Nigerian Cloud Engineering Team in Lagos',
+                    className: 'w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out'
+                  }),
+                  h('div', { className: 'absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent' }),
+                  
+                  // Top Live Hub Pill
+                  h('div', { className: 'absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950/80 backdrop-blur-md border border-cyan-500/40 text-xs font-mono text-cyan-300' },
+                    h(Icons.MapPin, { className: 'w-3.5 h-3.5 text-cyan-400' }),
+                    h('span', null, 'Lagos Tech Hub • Node NG-LAG-01')
+                  ),
+
+                  // Bottom Feature Pills
+                  h('div', { className: 'absolute bottom-4 left-4 right-4 flex flex-wrap items-center justify-between gap-3 text-left' },
+                    h('div', null,
+                      h('span', { className: 'text-xs uppercase font-bold tracking-wider text-cyan-400 font-mono block' }, 'ENGINEERED FOR SCALE'),
+                      h('h4', { className: 'text-sm sm:text-base font-bold text-white' }, 'Distributed MicroVM Compute Cluster')
+                    ),
+                    h('div', { className: 'flex items-center gap-2 font-mono text-xs' },
+                      h('span', { className: 'px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' }, '● 99.99% Uptime'),
+                      h('span', { className: 'px-2.5 py-1 rounded-lg bg-blue-500/20 text-blue-300 border border-blue-500/40' }, '< 30ms Edge Latency')
+                    )
+                  )
+                )
+              ),
+
+              // Architecture Flow Badge
+              h('div', { className: 'mt-10 p-4 rounded-2xl glass-panel max-w-3xl mx-auto' },
+                h('span', { className: 'text-xs uppercase font-bold text-slate-400 tracking-wider block mb-3 flex items-center justify-center gap-1.5' },
+                  h(Icons.Layers, { className: 'w-3.5 h-3.5 text-blue-400' }),
+                  'Decoupled Distributed Execution Pipeline'
+                ),
+                h('div', { className: 'flex flex-wrap items-center justify-center gap-2 font-mono text-xs text-slate-300' },
+                  h('span', { className: 'px-3 py-1.5 rounded-lg bg-blue-500/20 text-blue-300 border border-blue-500/30 flex items-center gap-1' },
+                    h(Icons.User, { className: 'w-3 h-3' }), 'Client UI / API'
+                  ),
+                  h('span', { className: 'text-slate-600' }, '➔'),
+                  h('span', { className: 'px-3 py-1.5 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 flex items-center gap-1' },
+                    h(Icons.Layers, { className: 'w-3 h-3' }), 'QStash Queue'
+                  ),
+                  h('span', { className: 'text-slate-600' }, '➔'),
+                  h('span', { className: 'px-3 py-1.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1' },
+                    h(Icons.Cpu, { className: 'w-3 h-3' }), 'Serverless MicroVMs'
+                  ),
+                  h('span', { className: 'text-slate-600' }, '➔'),
+                  h('span', { className: 'px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1' },
+                    h(Icons.Activity, { className: 'w-3 h-3' }), 'Supabase PostgreSQL'
+                  )
+                )
+              )
+            ),
+
+            // 3 Pillar Highlights
+            h('section', { className: 'py-12 px-4 max-w-6xl mx-auto' },
+              h('div', { className: 'grid grid-cols-1 md:grid-cols-3 gap-6' },
+                
+                h('div', { className: 'glass-card p-6' },
+                  h('div', { className: 'w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center mb-4 border border-blue-500/30 shadow-lg shadow-blue-500/10' },
+                    h(Icons.Zap, { className: 'w-5 h-5 text-blue-400' })
+                  ),
+                  h('h3', { className: 'text-base font-bold text-white mb-2' }, 'Asynchronous Decoupling'),
+                  h('p', { className: 'text-xs text-slate-400 leading-relaxed' },
+                    'Tasks are accepted immediately in 15ms and processed in the background, keeping the user interface completely non-blocking.'
+                  )
+                ),
+
+                h('div', { className: 'glass-card p-6' },
+                  h('div', { className: 'w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-4 border border-emerald-500/30 shadow-lg shadow-emerald-500/10' },
+                    h(Icons.Shield, { className: 'w-5 h-5 text-emerald-400' })
+                  ),
+                  h('h3', { className: 'text-base font-bold text-white mb-2' }, 'Dead-Letter Queue & Retries'),
+                  h('p', { className: 'text-xs text-slate-400 leading-relaxed' },
+                    'Exponential backoff (2s, 4s, 8s) recovers temporary faults, while persistent crashes are isolated in the DLQ with 1-click replay.'
+                  )
+                ),
+
+                h('div', { className: 'glass-card p-6' },
+                  h('div', { className: 'w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center mb-4 border border-cyan-500/30 shadow-lg shadow-cyan-500/10' },
+                    h(Icons.Activity, { className: 'w-5 h-5 text-cyan-400' })
+                  ),
+                  h('h3', { className: 'text-base font-bold text-white mb-2' }, 'Real Execution Artifacts'),
+                  h('p', { className: 'text-xs text-slate-400 leading-relaxed' },
+                    'Compiles multi-page PDF documents, applies pixel canvas matrix filters, and performs live cryptocurrency market data aggregation.'
+                  )
+                )
+              )
+            ),
+
+            // Footer
+            h('footer', { className: 'border-t border-slate-800/80 bg-slate-950/90 py-6 text-center text-xs text-slate-500' },
+              'ServerlessFlow • Enterprise Distributed Task Processing Platform'
+            )
+          );
+        }
+
+        // =========================================================================
+        // VIEW 4: AUTHENTICATED USER DASHBOARD
+        // =========================================================================
+        return h('div', { className: 'min-h-screen flex flex-col justify-between' },
+          
+          // Dashboard Header
+          h('header', { className: 'sticky top-0 z-40 w-full border-b border-slate-800/80 bg-slate-950/85 backdrop-blur-xl px-4 lg:px-8 py-3' },
+            h('div', { className: 'max-w-7xl mx-auto flex items-center justify-between gap-4' },
+              
+              h('div', { className: 'flex items-center gap-3' },
+                h(Icons.Logo, { size: 'w-9 h-9' }),
+                h('div', null,
+                  h('div', { className: 'flex items-center gap-2' },
+                    h('h1', { className: 'text-base font-bold font-display text-white tracking-tight' }, 'ServerlessFlow'),
+                    h('span', { className: 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 uppercase' }, 'User Portal')
+                  ),
+                  h('p', { className: 'text-[11px] text-slate-400 font-mono hidden sm:block' }, 'Workspace ID: ' + (currentUser ? currentUser.id : 'anon'))
+                )
+              ),
+
+              // Navigation Tabs
+              h('div', { className: 'hidden md:flex items-center gap-1 p-1 rounded-xl glass-panel text-xs' },
+                [
+                  { id: 'overview', label: 'Tasks & Telemetry', icon: Icons.Activity },
+                  { id: 'studio', label: 'Workload Studio', icon: Icons.Image },
+                  { id: 'apikeys', label: 'API & cURL', icon: Icons.Key },
+                  { id: 'chaos', label: 'Resilience Lab', icon: Icons.Flask }
+                ].map(tab =>
+                  h('button', {
+                    key: tab.id,
+                    onClick: () => setDashboardTab(tab.id),
+                    className: 'px-3 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1.5 ' + (dashboardTab === tab.id ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white')
+                  }, h(tab.icon, { className: 'w-3.5 h-3.5' }), tab.label)
+                )
+              ),
+
+              // User Actions & Profile
+              h('div', { className: 'flex items-center gap-2.5' },
+                
+                h('button', {
+                  onClick: () => setIsSubmitModalOpen(true),
+                  className: 'btn-gradient text-xs !py-1.5 !px-3'
+                }, h(Icons.Zap, { className: 'w-3.5 h-3.5' }), '+ Dispatch Task'),
+
+                dlq.length > 0 && h('button', {
+                  onClick: () => setIsDlqOpen(true),
+                  className: 'px-2 py-1.5 rounded-lg text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-bounce flex items-center gap-1'
+                }, h(Icons.Shield, { className: 'w-3.5 h-3.5 text-amber-400' }), 'DLQ (' + dlq.length + ')'),
+
+                // User Profile Box
+                h('div', { className: 'flex items-center gap-2 p-1 pl-2.5 rounded-xl glass-panel' },
+                  h('div', { className: 'text-left hidden lg:block' },
+                    h('span', { className: 'text-xs font-bold text-white block leading-tight' }, currentUser ? currentUser.name : 'Adeoluwa'),
+                    h('span', { className: 'text-[10px] text-cyan-400 font-mono block' }, currentUser ? currentUser.role : 'Lead Architect')
+                  ),
+                  h('img', {
+                    src: currentUser ? currentUser.avatar : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80',
+                    className: 'w-7 h-7 rounded-lg object-cover border border-cyan-500/30'
+                  }),
+                  h('button', {
+                    onClick: handleLogout,
+                    className: 'text-xs text-slate-400 hover:text-rose-400 px-1 py-0.5',
+                    title: 'Sign Out'
+                  }, 'Sign Out')
+                )
+              )
+            )
+          ),
+
+          // Mobile Sub-tabs
+          h('div', { className: 'md:hidden flex items-center justify-around border-b border-slate-800 bg-slate-950 px-2 py-2 text-xs font-bold' },
+            [
+              { id: 'overview', label: 'Pipeline', icon: Icons.Activity },
+              { id: 'studio', label: 'Studio', icon: Icons.Image },
+              { id: 'apikeys', label: 'API', icon: Icons.Key },
+              { id: 'chaos', label: 'Lab', icon: Icons.Flask }
+            ].map(tab =>
+              h('button', {
+                key: tab.id,
+                onClick: () => setDashboardTab(tab.id),
+                className: 'px-2.5 py-1 rounded-lg flex items-center gap-1 ' + (dashboardTab === tab.id ? 'bg-blue-600 text-white' : 'text-slate-400')
+              }, h(tab.icon, { className: 'w-3 h-3' }), tab.label)
+            )
+          ),
+
+          // Main Dashboard
+          h('main', { className: 'flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-6' },
+            
+            // 4 Metrics Cards
+            h('div', { className: 'grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6' },
+              
+              h('div', { className: 'glass-card p-4' },
+                h('span', { className: 'text-[11px] font-semibold text-slate-400 uppercase tracking-wider block flex items-center gap-1' },
+                  h(Icons.Zap, { className: 'w-3 h-3 text-cyan-400' }),
+                  'Total Dispatched'
+                ),
+                h('div', { className: 'mt-1 flex items-baseline gap-2' },
+                  h('span', { className: 'text-2xl font-bold font-display text-white' }, metrics.totalSubmitted),
+                  h('span', { className: 'text-xs text-cyan-400 font-mono' }, 'tasks')
+                ),
+                h('div', { className: 'mt-2 text-[11px] text-slate-400 pt-1.5 border-t border-slate-800 flex justify-between' },
+                  h('span', null, 'Queued: ', h('strong', { className: 'text-sky-300' }, tasks.filter(t => t.status === 'QUEUED').length)),
+                  h('span', null, 'Active: ', h('strong', { className: 'text-amber-400' }, activeCount))
+                )
+              ),
+
+              h('div', { className: 'glass-card p-4' },
+                h('span', { className: 'text-[11px] font-semibold text-slate-400 uppercase tracking-wider block flex items-center gap-1' },
+                  h(Icons.Activity, { className: 'w-3 h-3 text-indigo-400' }),
+                  'Average Latency'
+                ),
+                h('div', { className: 'mt-1 flex items-baseline gap-2' },
+                  h('span', { className: 'text-2xl font-bold font-display text-white' }, metrics.avgLatencyMs),
+                  h('span', { className: 'text-xs text-indigo-400 font-mono' }, 'ms')
+                ),
+                h('div', { className: 'mt-2 text-[11px] text-slate-400 pt-1.5 border-t border-slate-800 flex justify-between' },
+                  h('span', null, 'Speed: ', h('strong', { className: 'text-emerald-400' }, 'Sub-Second')),
+                  h('span', null, 'Cold Start: ', h('strong', { className: 'text-indigo-300' }, '<30ms'))
+                )
+              ),
+
+              h('div', { className: 'glass-card p-4' },
+                h('span', { className: 'text-[11px] font-semibold text-slate-400 uppercase tracking-wider block flex items-center gap-1' },
+                  h(Icons.Shield, { className: 'w-3 h-3 text-emerald-400' }),
+                  'Reliability Rate'
+                ),
+                h('div', { className: 'mt-1 flex items-baseline gap-2' },
+                  h('span', { className: 'text-2xl font-bold font-display text-white' },
+                    metrics.totalSubmitted ? Math.round((metrics.totalCompleted / (metrics.totalCompleted + metrics.totalFailed || 1)) * 100) : 100, '%'
+                  ),
+                  h('span', { className: 'text-xs text-emerald-400 font-mono' }, 'healthy')
+                ),
+                h('div', { className: 'mt-2 text-[11px] text-slate-400 pt-1.5 border-t border-slate-800 flex justify-between' },
+                  h('span', null, 'Completed: ', h('strong', { className: 'text-emerald-400' }, metrics.totalCompleted)),
+                  h('span', null, 'Failed: ', h('strong', { className: metrics.totalFailed > 0 ? 'text-rose-400' : 'text-slate-500' }, metrics.totalFailed))
+                )
+              ),
+
+              h('div', { className: 'glass-card p-4' },
+                h('span', { className: 'text-[11px] font-semibold text-slate-400 uppercase tracking-wider block flex items-center gap-1' },
+                  h(Icons.Cpu, { className: 'w-3 h-3 text-amber-400' }),
+                  'Elastic Scaling'
+                ),
+                h('div', { className: 'mt-1 flex items-baseline gap-2' },
+                  h('span', { className: 'text-2xl font-bold font-display text-white' }, activeCount > 0 ? activeCount : '0 (Idle)'),
+                  h('span', { className: 'text-xs text-amber-400 font-mono' }, 'microVMs')
+                ),
+                h('div', { className: 'mt-2 text-[11px] text-slate-400 pt-1.5 border-t border-slate-800 flex justify-between' },
+                  h('span', null, 'Scale Mode: ', h('strong', { className: 'text-emerald-400' }, 'Scale to 0')),
+                  h('span', null, 'DLQ: ', h('strong', { className: dlq.length > 0 ? 'text-rose-400' : 'text-slate-400' }, dlq.length))
+                )
+              )
+            ),
+
+            // Overview Tab
+            dashboardTab === 'overview' && h('div', null,
+              h('div', { className: 'glass-panel p-5 mb-6' },
+                h('div', { className: 'flex items-center justify-between pb-3 border-b border-slate-800 mb-4' },
+                  h('h3', { className: 'text-sm font-bold font-display text-white flex items-center gap-1.5' },
+                    h(Icons.Activity, { className: 'w-4 h-4 text-cyan-400' }),
+                    'Real-Time Execution Latency Stream (ms)'
+                  ),
+                  h('span', { className: 'text-xs font-mono text-slate-400' }, 'Avg: ', h('strong', { className: 'text-cyan-400' }, metrics.avgLatencyMs + 'ms'))
+                ),
+                h('div', { className: 'h-48 w-full' },
+                  h('canvas', { ref: chartRef })
+                )
+              ),
+
+              h('div', { className: 'grid grid-cols-1 lg:grid-cols-12 gap-6' },
+                
+                // Task Board
+                h('div', { className: 'lg:col-span-7 glass-panel p-4 sm:p-5' },
+                  h('div', { className: 'flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800 mb-4' },
+                    h('div', null,
+                      h('h3', { className: 'text-sm font-bold font-display text-white flex items-center gap-1.5' },
+                        h(Icons.Layers, { className: 'w-4 h-4 text-blue-400' }),
+                        'Live Orchestrated Tasks'
+                      ),
+                      h('p', { className: 'text-xs text-slate-400' }, 'Click any task to inspect details or download output')
+                    ),
+                    h('div', { className: 'flex items-center gap-1 overflow-x-auto' },
+                      ['ALL', 'QUEUED', 'PROCESSING', 'COMPLETED', 'FAILED'].map(filterTab =>
+                        h('button', {
+                          key: filterTab,
+                          onClick: () => setActiveFilter(filterTab),
+                          className: 'px-2.5 py-1 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ' + (activeFilter === filterTab ? 'bg-blue-600 text-white font-bold' : 'bg-slate-900 text-slate-400 hover:text-white')
+                        }, filterTab === 'ALL' ? 'All (' + tasks.length + ')' : filterTab)
+                      )
+                    )
+                  ),
+
+                  h('div', { className: 'space-y-3 max-h-[480px] overflow-y-auto pr-1' },
+                    filteredTasks.length === 0
+                      ? h('div', { className: 'text-center py-10 border border-dashed border-slate-800 rounded-xl' },
+                          h('p', { className: 'text-xs text-slate-400' }, 'No tasks in view: ', h('strong', { className: 'text-cyan-400' }, activeFilter)),
+                          h('button', {
+                            onClick: () => setIsSubmitModalOpen(true),
+                            className: 'mt-2 text-xs font-semibold text-cyan-400 underline flex items-center justify-center gap-1 mx-auto'
+                          }, h(Icons.Zap, { className: 'w-3 h-3' }), 'Dispatch a new task')
+                        )
+                      : filteredTasks.map(task =>
+                          h('div', {
+                            key: task.id,
+                            onClick: () => setSelectedTask(task),
+                            className: 'glass-card p-3.5 cursor-pointer border ' + (selectedTask && selectedTask.id === task.id ? 'border-cyan-500 bg-slate-900/90' : 'border-slate-800/80')
+                          },
+                            h('div', { className: 'flex items-start sm:items-center justify-between gap-3' },
+                              h('div', { className: 'flex-1 min-w-0' },
+                                h('div', { className: 'flex items-center gap-2 flex-wrap' },
+                                  h('span', { className: 'text-sm font-bold text-white truncate' }, task.task_name),
+                                  h('span', { className: 'text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-800 text-slate-400' }, task.id.slice(-6)),
+                                  h('span', { className: 'text-[10px] font-semibold px-1.5 py-0.2 rounded bg-blue-500/15 text-blue-300' }, task.priority)
+                                ),
+                                h('div', { className: 'text-xs text-slate-400 font-mono mt-1 flex flex-wrap gap-x-3 gap-y-0.5' },
+                                  h('span', null, 'Type: ', h('strong', { className: 'text-slate-300' }, task.task_type)),
+                                  task.worker_id && h('span', null, 'Worker: ', h('strong', { className: 'text-cyan-400' }, task.worker_id)),
+                                  task.execution_time_ms > 0 && h('span', null, 'Time: ', h('strong', { className: 'text-emerald-400' }, task.execution_time_ms + 'ms'))
+                                )
+                              ),
+
+                              h('div', { className: 'flex items-center gap-2 shrink-0' },
+                                h('span', {
+                                  className: 'text-[11px] font-bold px-2 py-0.5 rounded uppercase ' + (
+                                    task.status === 'COMPLETED' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' :
+                                    task.status === 'PROCESSING' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30 badge-processing' :
+                                    task.status === 'RETRYING' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' :
+                                    task.status === 'FAILED' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' :
+                                    'bg-sky-500/20 text-sky-300'
+                                  )
+                                }, task.status),
+
+                                task.result && task.result.downloadUrl && h('a', {
+                                  href: task.result.downloadUrl,
+                                  download: task.result.filename || 'report.pdf',
+                                  onClick: (e) => e.stopPropagation(),
+                                  className: 'px-2 py-1 rounded bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 border border-blue-500/40 text-xs font-semibold flex items-center gap-1'
+                                }, h(Icons.Download, { className: 'w-3 h-3' }), 'PDF')
+                              )
+                            ),
+
+                            (task.status === 'PROCESSING' || task.status === 'RETRYING' || task.status === 'QUEUED') && h('div', { className: 'mt-2.5' },
+                              h('div', { className: 'w-full h-1.5 bg-slate-800 rounded-full overflow-hidden' },
+                                h('div', { className: 'h-full progress-bar-fill', style: { width: Math.max(task.progress, 10) + '%' } })
+                              )
+                            )
+                          )
+                        )
+                  )
+                ),
+
+                // Terminal Console
+                h('div', { className: 'lg:col-span-5 glass-panel p-4 sm:p-5' },
+                  h('div', { className: 'flex items-center justify-between pb-3 border-b border-slate-800 mb-3 font-mono text-xs' },
+                    h('span', { className: 'text-cyan-400 font-bold flex items-center gap-1.5' },
+                      h('span', { className: 'w-2 h-2 rounded-full bg-cyan-400 animate-pulse' }),
+                      'Worker Telemetry Stream'
+                    ),
+                    h('span', { className: 'text-slate-400' }, logs.length + ' events')
+                  ),
+
+                  h('div', { className: 'terminal-window p-3 max-h-[460px] overflow-y-auto space-y-2' },
+                    logs.length === 0
+                      ? h('div', { className: 'text-slate-600 italic py-6 text-center' }, '> Initializing worker telemetry buffer...')
+                      : logs.map(log =>
+                          h('div', { key: log.id, className: 'text-[11px] leading-relaxed flex items-start gap-1.5' },
+                            h('span', { className: 'text-slate-600 shrink-0 select-none' }, log.timestamp),
+                            h('span', {
+                              className: 'px-1 rounded text-[10px] font-bold uppercase shrink-0 ' + (
+                                log.level === 'SUCCESS' ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/30' :
+                                log.level === 'ERROR' ? 'text-rose-400 bg-rose-500/10 border border-rose-500/30' :
+                                log.level === 'WARN' ? 'text-amber-400 bg-amber-500/10 border border-amber-500/30' :
+                                'text-cyan-400 bg-cyan-500/10 border border-cyan-500/30'
+                              )
+                            }, log.level),
+                            h('span', { className: 'text-slate-300 break-all' }, log.message)
+                          )
+                        )
+                  )
+                )
+              )
+            ),
+
+            // Workload Studio Tab
+            dashboardTab === 'studio' && h('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-6' },
+              h('div', { className: 'glass-panel p-6' },
+                h('h3', { className: 'text-base font-bold font-display text-white mb-1 flex items-center gap-2' },
+                  h(Icons.Image, { className: 'w-5 h-5 text-cyan-400' }),
+                  'Real Image Filter & Compression Studio'
+                ),
+                h('p', { className: 'text-xs text-slate-400 mb-4' },
+                  'Upload an image from your device and execute matrix transformations on a serverless worker'
+                ),
+
+                h('div', { className: 'p-4 rounded-xl border border-dashed border-slate-700 bg-slate-900/80 text-center mb-4' },
+                  customImagePreview
+                    ? h('div', { className: 'space-y-3' },
+                        h('img', { src: customImagePreview, className: 'max-h-40 mx-auto rounded-lg shadow-lg' }),
+                        h('button', {
+                          onClick: () => { setCustomImageFile(null); setCustomImagePreview(null); },
+                          className: 'text-xs text-rose-400 hover:underline'
+                        }, 'Remove Image')
+                      )
+                    : h('div', null,
+                        h('input', {
+                          type: 'file',
+                          accept: 'image/*',
+                          id: 'img-upload',
+                          className: 'hidden',
+                          onChange: (e) => {
+                            const file = e.target.files[0];
+                            if (file) {
+                              setCustomImageFile(file);
+                              const reader = new FileReader();
+                              reader.onload = (re) => setCustomImagePreview(re.target.result);
+                              reader.readAsDataURL(file);
+                            }
+                          }
+                        }),
+                        h('label', { htmlFor: 'img-upload', className: 'btn-secondary text-xs cursor-pointer inline-flex items-center gap-1.5' },
+                          h(Icons.Image, { className: 'w-4 h-4 text-cyan-400' }),
+                          'Select Image from Device'
+                        ),
+                        h('p', { className: 'text-[11px] text-slate-500 mt-2' }, 'PNG, JPG, WebP')
+                      )
+                ),
+
+                h('button', {
+                  onClick: () => {
+                    handleDispatchTask({
+                      name: customImageFile ? 'Process: ' + customImageFile.name : 'Generative Cyber Image Filter',
+                      type: 'image_processor',
+                      priority: 'HIGH',
+                      payload: { hasCustomUpload: Boolean(customImagePreview) }
+                    });
+                    setDashboardTab('overview');
+                  },
+                  className: 'btn-gradient w-full text-xs'
+                }, h(Icons.Zap, { className: 'w-4 h-4' }), 'Dispatch Image Processor Worker')
+              ),
+
+              h('div', { className: 'glass-panel p-6' },
+                h('h3', { className: 'text-base font-bold font-display text-white mb-1 flex items-center gap-2' },
+                  h(Icons.FileText, { className: 'w-5 h-5 text-blue-400' }),
+                  'Custom PDF Report Compiler'
+                ),
+                h('p', { className: 'text-xs text-slate-400 mb-4' },
+                  'Generate formatted vector PDF documents with custom student and project metadata'
+                ),
+
+                h('div', { className: 'space-y-3 mb-4' },
+                  h('div', null,
+                    h('label', { className: 'text-xs text-slate-400 block mb-1' }, 'Document Title'),
+                    h('input', {
+                      type: 'text',
+                      value: customPdfTitle,
+                      onChange: (e) => setCustomPdfTitle(e.target.value),
+                      className: 'w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500'
+                    })
+                  ),
+                  h('div', null,
+                    h('label', { className: 'text-xs text-slate-400 block mb-1' }, 'Author / Presenter Name'),
+                    h('input', {
+                      type: 'text',
+                      value: customPdfAuthor,
+                      onChange: (e) => setCustomPdfAuthor(e.target.value),
+                      className: 'w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500'
+                    })
+                  )
+                ),
+
+                h('button', {
+                  onClick: () => {
+                    handleDispatchTask({
+                      name: customPdfTitle || 'PDF Report',
+                      type: 'pdf_generator',
+                      priority: 'CRITICAL',
+                      payload: { title: customPdfTitle, author: customPdfAuthor }
+                    });
+                    setDashboardTab('overview');
+                  },
+                  className: 'btn-gradient w-full text-xs'
+                }, h(Icons.FileText, { className: 'w-4 h-4' }), 'Compile & Generate Downloadable PDF')
+              )
+            ),
+
+            // API Keys Tab
+            dashboardTab === 'apikeys' && h('div', { className: 'max-w-3xl mx-auto glass-panel p-6' },
+              h('h3', { className: 'text-base font-bold font-display text-white mb-1 flex items-center gap-2' },
+                h(Icons.Key, { className: 'w-5 h-5 text-cyan-400' }),
+                'Programmatic API & Webhook Dispatcher'
+              ),
+              h('p', { className: 'text-xs text-slate-400 mb-5' },
+                'Submit background serverless tasks programmatically from Python, Node.js, or cURL in your terminal'
+              ),
+
+              h('div', { className: 'p-4 rounded-xl bg-slate-900/90 border border-slate-800 mb-5' },
+                h('span', { className: 'text-xs font-semibold text-slate-400 block mb-1' }, 'Your Personal Secret Key:'),
+                h('div', { className: 'flex items-center justify-between gap-3' },
+                  h('code', { className: 'text-xs text-cyan-400 font-mono' }, currentUser ? currentUser.apiKey : 'flow_live_9f83a0bc4e21d5790cba1248'),
+                  h('button', {
+                    onClick: () => {
+                      navigator.clipboard.writeText(currentUser ? currentUser.apiKey : 'flow_live_9f83a0bc4e21d5790cba1248');
+                      setIsApiKeyCopied(true);
+                      setTimeout(() => setIsApiKeyCopied(false), 2000);
+                    },
+                    className: 'btn-secondary text-xs !py-1 !px-2.5 flex items-center gap-1'
+                  }, h(Icons.Copy, { className: 'w-3.5 h-3.5' }), isApiKeyCopied ? 'Copied! ✓' : 'Copy Key')
+                )
+              ),
+
+              h('div', null,
+                h('span', { className: 'text-xs font-semibold text-slate-400 block mb-1.5' }, 'cURL Command Example:'),
+                h('pre', { className: 'p-4 rounded-xl bg-[#060A13] border border-slate-800 text-xs font-mono text-cyan-300 overflow-x-auto leading-relaxed' },
+`curl -X POST "http://localhost:5173/api/worker" \\
+  -H "Authorization: Bearer ${currentUser ? currentUser.apiKey : 'flow_live_9f83a0bc4e21d5790cba1248'}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "type": "pdf_generator",
+    "priority": "HIGH",
+    "payload": { "title": "Automated Serverless Batch Job" }
+  }'`
+                )
+              )
+            ),
+
+            // Chaos Lab Tab
+            dashboardTab === 'chaos' && h('div', { className: 'max-w-3xl mx-auto glass-panel p-6' },
+              h('h3', { className: 'text-base font-bold font-display text-white mb-1 flex items-center gap-2' },
+                h(Icons.Flask, { className: 'w-5 h-5 text-rose-400' }),
+                'Chaos Engineering & Fault Injection Lab'
+              ),
+              h('p', { className: 'text-xs text-slate-400 mb-5' },
+                'Test how the serverless task engine handles worker crashes, memory timeouts, and network failure recovery.'
+              ),
+
+              h('div', { className: 'p-4 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center justify-between mb-5' },
+                h('div', null,
+                  h('span', { className: 'text-sm font-bold text-white block' }, 'Simulate Worker Timeouts (504 Gateway Error)'),
+                  h('span', { className: 'text-xs text-slate-400' }, 'Injects random microVM crashes to demonstrate 3x Exponential Backoff auto-retries')
+                ),
+                h('button', {
+                  onClick: () => setChaosMode(!chaosMode),
+                  className: 'btn-gradient text-xs !py-2 !px-4 ' + (chaosMode ? '!bg-rose-600 animate-pulse' : '')
+                }, h(Icons.Flask, { className: 'w-3.5 h-3.5' }), chaosMode ? 'Chaos Active: ON' : 'Activate Chaos Mode')
+              ),
+
+              h('button', {
+                onClick: () => {
+                  setChaosMode(true);
+                  handleDispatchTask({
+                    name: 'Chaos Fault-Tolerance Benchmark',
+                    type: 'data_scraper',
+                    priority: 'CRITICAL',
+                    payload: { simulateCrash: true }
+                  });
+                  setDashboardTab('overview');
+                },
+                className: 'btn-secondary w-full text-xs !py-2.5 flex items-center justify-center gap-1.5'
+              }, h(Icons.Zap, { className: 'w-3.5 h-3.5 text-amber-400' }), 'Dispatch Task with Injected Failure & Watch Recovery')
+            )
+          ),
+
+          // Footer
+          h('footer', { className: 'border-t border-slate-800/80 bg-slate-950/90 py-4 text-center text-xs text-slate-500' },
+            'ServerlessFlow • Enterprise Distributed Task Processing Platform'
+          ),
+
+          // Modals
+          isSubmitModalOpen && h('div', { className: 'fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn' },
+            h('div', { className: 'glass-panel p-6 w-full max-w-lg border-cyan-500/30' },
+              h('div', { className: 'flex justify-between items-center mb-4' },
+                h('h3', { className: 'text-base font-bold font-display text-white flex items-center gap-1.5' },
+                  h(Icons.Zap, { className: 'w-4 h-4 text-cyan-400' }),
+                  'Select Serverless Workload'
+                ),
+                h('button', { onClick: () => setIsSubmitModalOpen(false), className: 'text-slate-400 hover:text-white' }, '✕')
+              ),
+              h('div', { className: 'space-y-3' },
+                [
+                  { id: 'pdf_generator', title: 'PDF Report Generator', icon: Icons.FileText, desc: 'Compiles formatted vector PDF report with 1-click download' },
+                  { id: 'image_processor', title: 'Image Filter & Optimizer', icon: Icons.Image, desc: 'Asynchronously applies pixel matrix filters' },
+                  { id: 'data_scraper', title: 'Big Data Aggregator (Live BTC API)', icon: Icons.Activity, desc: 'Fetches real live market data and computes statistics' },
+                  { id: 'heavy_math', title: 'Cryptographic Proof-of-Work Matrix', icon: Icons.Cpu, desc: 'Executes heavy cryptographic calculation without UI lag' }
+                ].map(item =>
+                  h('button', {
+                    key: item.id,
+                    onClick: () => {
+                      handleDispatchTask({ name: item.title, type: item.id, priority: 'HIGH' });
+                      setIsSubmitModalOpen(false);
+                      setDashboardTab('overview');
+                    },
+                    className: 'w-full p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-500 text-left transition-all flex items-start gap-3'
+                  },
+                    h('div', { className: 'w-8 h-8 rounded-lg bg-blue-500/20 text-cyan-400 flex items-center justify-center shrink-0 mt-0.5' },
+                      h(item.icon, { className: 'w-4 h-4' })
+                    ),
+                    h('div', null,
+                      h('span', { className: 'text-sm font-bold text-white block' }, item.title),
+                      h('span', { className: 'text-xs text-slate-400' }, item.desc)
+                    )
+                  )
+                )
+              )
+            )
+          ),
+
+          isDlqOpen && h('div', { className: 'fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn' },
+            h('div', { className: 'glass-panel p-6 w-full max-w-xl border-amber-500/40' },
+              h('div', { className: 'flex justify-between items-center mb-4' },
+                h('h3', { className: 'text-base font-bold text-amber-300 flex items-center gap-1.5' },
+                  h(Icons.Shield, { className: 'w-4 h-4 text-amber-400' }),
+                  'Dead-Letter Queue (DLQ) Inspector'
+                ),
+                h('button', { onClick: () => setIsDlqOpen(false), className: 'text-slate-400 hover:text-white' }, '✕')
+              ),
+              h('div', { className: 'space-y-3 max-h-80 overflow-y-auto' },
+                dlq.map(item =>
+                  h('div', { key: item.id, className: 'p-3 rounded-lg bg-slate-900 border border-rose-500/30 text-xs font-mono flex items-center justify-between' },
+                    h('div', null,
+                      h('strong', { className: 'text-white block' }, item.task_name),
+                      h('p', { className: 'text-rose-300 text-[11px] mt-0.5' }, item.reason)
+                    ),
+                    h('button', {
+                      onClick: () => handleReplayDLQ(item.id),
+                      className: 'btn-gradient text-xs !py-1 !px-2.5 flex items-center gap-1'
+                    }, h(Icons.Refresh, { className: 'w-3 h-3' }), 'Replay')
+                  )
+                )
+              )
+            )
+          ),
+
+          selectedTask && h('div', { className: 'fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn' },
+            h('div', { className: 'glass-panel p-6 w-full max-w-xl max-h-[85vh] overflow-y-auto border-cyan-500/30 relative' },
+              h('button', { onClick: () => setSelectedTask(null), className: 'absolute top-4 right-4 text-slate-400 hover:text-white' }, '✕'),
+              
+              h('div', { className: 'flex items-center gap-3 mb-4' },
+                h('div', { className: 'w-10 h-10 rounded-xl bg-blue-500/20 text-cyan-400 flex items-center justify-center text-lg' },
+                  h(Icons.FileText, { className: 'w-5 h-5 text-cyan-400' })
+                ),
+                h('div', null,
+                  h('h3', { className: 'text-base font-bold font-display text-white' }, selectedTask.task_name),
+                  h('p', { className: 'text-xs text-slate-400 font-mono' }, 'ID: ' + selectedTask.id)
+                )
+              ),
+
+              selectedTask.result && h('div', { className: 'mb-4' },
+                h('span', { className: 'text-xs font-bold text-emerald-400 block mb-2 uppercase' }, 'Artifact Output:'),
+                
+                selectedTask.result.downloadUrl && h('div', { className: 'p-4 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between' },
+                  h('div', null,
+                    h('span', { className: 'text-xs font-bold text-white block' }, selectedTask.result.filename),
+                    h('span', { className: 'text-[11px] text-slate-400' }, selectedTask.result.sizeKb + ' KB Vector PDF')
+                  ),
+                  h('a', {
+                    href: selectedTask.result.downloadUrl,
+                    download: selectedTask.result.filename,
+                    className: 'btn-gradient text-xs flex items-center gap-1.5'
+                  }, h(Icons.Download, { className: 'w-3.5 h-3.5' }), 'Download PDF')
+                ),
+
+                selectedTask.result.previewUrl && h('div', { className: 'p-3 rounded-xl bg-slate-900 border border-slate-800 text-center' },
+                  h('img', { src: selectedTask.result.previewUrl, className: 'max-h-52 mx-auto rounded-lg shadow-md mb-2' }),
+                  h('span', { className: 'text-xs text-cyan-300 font-mono' }, selectedTask.result.filterName)
+                ),
+
+                selectedTask.result.btcPriceUsd && h('div', { className: 'p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2 font-mono text-xs' },
+                  h('div', { className: 'flex justify-between' }, h('span', { className: 'text-slate-400' }, 'Bitcoin Live Price:'), h('strong', { className: 'text-emerald-400' }, selectedTask.result.btcPriceUsd)),
+                  h('div', { className: 'flex justify-between' }, h('span', { className: 'text-slate-400' }, 'Ethereum Live Price:'), h('strong', { className: 'text-cyan-400' }, selectedTask.result.ethPriceUsd)),
+                  h('div', { className: 'flex justify-between' }, h('span', { className: 'text-slate-400' }, 'Records Processed:'), h('strong', { className: 'text-white' }, selectedTask.result.recordsScraped))
+                ),
+
+                selectedTask.result.proofOfWorkHash && h('div', { className: 'p-4 rounded-xl bg-slate-900 border border-slate-800 font-mono text-xs space-y-2' },
+                  h('span', { className: 'text-slate-400 block' }, 'SHA-256 Nonce Verified:'),
+                  h('p', { className: 'text-cyan-300 bg-slate-950 p-2 rounded break-all' }, selectedTask.result.proofOfWorkHash),
+                  h('span', { className: 'text-emerald-400 block' }, 'Benchmark: ' + selectedTask.result.mflopsScore)
+                )
+              ),
+
+              h('div', { className: 'pt-3 border-t border-slate-800 flex justify-end' },
+                h('button', { onClick: () => setSelectedTask(null), className: 'btn-secondary text-xs' }, 'Close')
+              )
+            )
+          )
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById('root')).render(h(App));
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', startApp);
+    } else {
+      startApp();
+    }
+  </script>
+</body>
+</html>

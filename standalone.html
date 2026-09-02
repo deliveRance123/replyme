@@ -250,6 +250,11 @@
             h('path', { d: 'M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2' }),
             h('circle', { cx: '12', cy: '7', r: '4' })
           ),
+        Edit: ({ className = 'w-4 h-4' }) =>
+          h('svg', { className, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round' },
+            h('path', { d: 'M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7' }),
+            h('path', { d: 'M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z' })
+          ),
         Layers: ({ className = 'w-4 h-4' }) => 
           h('svg', { className, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round' },
             h('polygon', { points: '12 2 2 7 12 12 22 7 12 2' }),
@@ -287,6 +292,16 @@
           )
       };
 
+      // Preset Gallery of High-Quality Avatars
+      const AVATAR_PRESETS = [
+        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1628157582853-a796fa650a6a?w=150&auto=format&fit=crop&q=80'
+      ];
+
       function App() {
         const [currentUser, setCurrentUser] = useState(() => {
           try {
@@ -295,21 +310,29 @@
           } catch (e) { return null; }
         });
 
-        // Current Page: 'landing' | 'login' (Dedicated Login Page) | 'signup' (Dedicated Sign Up Page) | 'dashboard'
+        // Current Page: 'landing' | 'login' | 'signup' | 'dashboard'
         const [currentPage, setCurrentPage] = useState(() => {
           const savedUser = localStorage.getItem('serverless_user');
           return savedUser ? 'dashboard' : 'landing';
         });
 
+        // Form Inputs
         const [authEmail, setAuthEmail] = useState('');
         const [authPassword, setAuthPassword] = useState('');
         const [authName, setAuthName] = useState('');
         const [dashboardTab, setDashboardTab] = useState('overview');
 
+        // Modals
         const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
         const [isDlqOpen, setIsDlqOpen] = useState(false);
         const [selectedTask, setSelectedTask] = useState(null);
         const [isApiKeyCopied, setIsApiKeyCopied] = useState(false);
+        const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+
+        // Edit Profile State
+        const [editProfileName, setEditProfileName] = useState('');
+        const [editProfileRole, setEditProfileRole] = useState('');
+        const [editProfileAvatar, setEditProfileAvatar] = useState('');
 
         const [tasks, setTasks] = useState([]);
         const [logs, setLogs] = useState([]);
@@ -327,17 +350,29 @@
         const [customImageFile, setCustomImageFile] = useState(null);
         const [customImagePreview, setCustomImagePreview] = useState(null);
         const [customPdfTitle, setCustomPdfTitle] = useState('System Performance Audit');
-        const [customPdfAuthor, setCustomPdfAuthor] = useState('Adeoluwa');
+        const [customPdfAuthor, setCustomPdfAuthor] = useState('');
 
         const chartRef = useRef(null);
         const chartInstance = useRef(null);
+
+        // Synchronize edit profile when user state changes
+        useEffect(() => {
+          if (currentUser) {
+            setEditProfileName(currentUser.name || 'Cloud Architect');
+            setEditProfileRole(currentUser.role || 'Lead Cloud Engineer');
+            setEditProfileAvatar(currentUser.avatar || AVATAR_PRESETS[0]);
+            if (!customPdfAuthor) {
+              setCustomPdfAuthor(currentUser.name || 'Cloud Architect');
+            }
+          }
+        }, [currentUser]);
 
         useEffect(() => {
           handleDispatchTask({
             name: 'Infrastructure Health Audit',
             type: 'pdf_generator',
             priority: 'HIGH',
-            payload: { title: 'Infrastructure Health Audit', author: 'Adeoluwa' }
+            payload: { title: 'Infrastructure Health Audit', author: currentUser ? currentUser.name : 'Cloud Engineer' }
           });
 
           setTimeout(() => {
@@ -395,35 +430,56 @@
           ]);
         };
 
+        // Handle Dynamic Registration & Login
         const handleAuthSubmit = (e) => {
           e.preventDefault();
+          const cleanName = authName.trim() || authEmail.split('@')[0] || 'Cloud Architect';
           const user = {
-            id: 'usr_' + Date.now(),
-            name: authName || authEmail.split('@')[0] || 'Adeoluwa',
-            email: authEmail || 'adeoluwa@replyme.cloud',
+            id: 'usr_' + Date.now().toString().slice(-6),
+            name: cleanName,
+            email: authEmail.trim() || 'user@example.com',
             role: 'Lead Cloud Architect',
-            apiKey: 'flow_live_9f83a0bc4e21d5790cba1248',
-            avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80'
+            apiKey: 'flow_live_' + Array.from({length: 20}, () => Math.floor(Math.random()*16).toString(16)).join(''),
+            avatar: AVATAR_PRESETS[Math.floor(Math.random() * AVATAR_PRESETS.length)]
           };
           setCurrentUser(user);
           localStorage.setItem('serverless_user', JSON.stringify(user));
+          setCustomPdfAuthor(cleanName);
           setCurrentPage('dashboard');
-          if (window.confetti) window.confetti({ particleCount: 60, spread: 70 });
+          if (window.confetti) window.confetti({ particleCount: 70, spread: 80 });
         };
 
+        // 1-Click Demo Login
         const handleDemoLogin = () => {
           const demoUser = {
-            id: 'usr_demo_101',
-            name: 'Adeoluwa',
-            email: 'adeoluwa@replyme.cloud',
-            role: 'Lead Cloud Architect',
+            id: 'usr_' + Date.now().toString().slice(-6),
+            name: 'Cloud Architect',
+            email: 'architect@replyme.cloud',
+            role: 'Lead Cloud Engineer',
             apiKey: 'flow_live_9f83a0bc4e21d5790cba1248',
-            avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80'
+            avatar: AVATAR_PRESETS[1]
           };
           setCurrentUser(demoUser);
           localStorage.setItem('serverless_user', JSON.stringify(demoUser));
+          setCustomPdfAuthor('Cloud Architect');
           setCurrentPage('dashboard');
           if (window.confetti) window.confetti({ particleCount: 50, spread: 60 });
+        };
+
+        const handleSaveProfile = (e) => {
+          e.preventDefault();
+          if (!currentUser) return;
+          const updated = {
+            ...currentUser,
+            name: editProfileName.trim() || currentUser.name,
+            role: editProfileRole.trim() || currentUser.role,
+            avatar: editProfileAvatar || currentUser.avatar
+          };
+          setCurrentUser(updated);
+          localStorage.setItem('serverless_user', JSON.stringify(updated));
+          setCustomPdfAuthor(updated.name);
+          setIsEditProfileOpen(false);
+          if (window.confetti) window.confetti({ particleCount: 40, spread: 50 });
         };
 
         const handleLogout = () => {
@@ -481,7 +537,7 @@
               const { jsPDF } = window.jspdf;
               const doc = new jsPDF();
               const reportTitle = (currentTask.payload && currentTask.payload.title) || customPdfTitle || 'Performance Audit';
-              const author = (currentTask.payload && currentTask.payload.author) || (currentUser ? currentUser.name : 'Adeoluwa');
+              const author = (currentTask.payload && currentTask.payload.author) || (currentUser ? currentUser.name : 'Cloud Engineer');
 
               doc.setFillColor(15, 23, 42);
               doc.rect(0, 0, 210, 32, 'F');
@@ -497,7 +553,7 @@
 
               doc.setTextColor(30, 30, 30);
               doc.setFontSize(10);
-              doc.text(`Lead Architect: ${author} | Task ID: ${taskId}`, 14, 42);
+              doc.text(`Author / Architect: ${author} | Task ID: ${taskId}`, 14, 42);
 
               if (doc.autoTable) {
                 doc.autoTable({
@@ -666,25 +722,21 @@
         const activeCount = tasks.filter(t => t.status === 'PROCESSING' || t.status === 'RETRYING').length;
 
         // =========================================================================
-        // VIEW 1: DEDICATED SIGN IN PAGE (SEPARATE PAGE, CLEAN MODERN UI)
+        // VIEW 1: DEDICATED SIGN IN PAGE
         // =========================================================================
         if (currentPage === 'login') {
           return h('div', { className: 'min-h-screen flex flex-col justify-center items-center px-4 py-8 relative bg-slate-950' },
             
-            // Glows
             h('div', { className: 'absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none' }),
             h('div', { className: 'absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none' }),
 
-            // Back to Home Link
             h('button', {
               onClick: () => setCurrentPage('landing'),
               className: 'absolute top-6 left-6 flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors z-20'
             }, '← Back to Home'),
 
-            // Main Login Container
             h('div', { className: 'w-full max-w-4xl grid grid-cols-1 md:grid-cols-12 glass-panel overflow-hidden border-slate-700/60 shadow-2xl relative z-10' },
               
-              // Left Showcase Panel (5 cols)
               h('div', { className: 'md:col-span-5 p-8 bg-gradient-to-b from-blue-950/90 to-slate-950 flex flex-col justify-between border-b md:border-b-0 md:border-r border-slate-800' },
                 h('div', null,
                   h('div', { className: 'flex items-center gap-3 mb-6' },
@@ -719,7 +771,6 @@
                 )
               ),
 
-              // Right Form Panel (7 cols) with Datacenter Background
               h('div', {
                 className: 'md:col-span-7 p-8 flex flex-col justify-center relative',
                 style: {
@@ -731,14 +782,13 @@
                 
                 h('div', { className: 'mb-5' },
                   h('h3', { className: 'text-xl font-bold font-display text-white' }, 'Sign In'),
-                  h('p', { className: 'text-xs text-slate-400' }, 'Enter your account details to access the dashboard')
+                  h('p', { className: 'text-xs text-slate-400' }, 'Enter your account details to access your dashboard')
                 ),
 
-                // 1-Click Instant Demo Login
                 h('button', {
                   onClick: handleDemoLogin,
                   className: 'btn-gradient w-full text-xs !py-3 mb-5 shadow-lg shadow-blue-500/20'
-                }, h(Icons.Zap, { className: 'w-4 h-4' }), '1-Click Test Login as Lead Architect (Adeoluwa)'),
+                }, h(Icons.Zap, { className: 'w-4 h-4' }), '1-Click Demo Login as Cloud Architect'),
 
                 h('div', { className: 'flex items-center gap-2 mb-5' },
                   h('div', { className: 'h-px bg-slate-700/80 flex-1' }),
@@ -746,7 +796,6 @@
                   h('div', { className: 'h-px bg-slate-700/80 flex-1' })
                 ),
 
-                // Login Form
                 h('form', { onSubmit: handleAuthSubmit, className: 'space-y-4' },
                   h('div', null,
                     h('label', { className: 'text-xs text-slate-300 font-semibold block mb-1' }, 'Email Address'),
@@ -792,25 +841,21 @@
         }
 
         // =========================================================================
-        // VIEW 2: DEDICATED SIGN UP PAGE (SEPARATE PAGE, CLEAN MODERN UI)
+        // VIEW 2: DEDICATED SIGN UP PAGE
         // =========================================================================
         if (currentPage === 'signup') {
           return h('div', { className: 'min-h-screen flex flex-col justify-center items-center px-4 py-8 relative bg-slate-950' },
             
-            // Glows
             h('div', { className: 'absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none' }),
             h('div', { className: 'absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none' }),
 
-            // Back to Home Link
             h('button', {
               onClick: () => setCurrentPage('landing'),
               className: 'absolute top-6 left-6 flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors z-20'
             }, '← Back to Home'),
 
-            // Main Signup Container
             h('div', { className: 'w-full max-w-4xl grid grid-cols-1 md:grid-cols-12 glass-panel overflow-hidden border-slate-700/60 shadow-2xl relative z-10' },
               
-              // Left Showcase Panel (5 cols)
               h('div', { className: 'md:col-span-5 p-8 bg-gradient-to-b from-blue-950/90 to-slate-950 flex flex-col justify-between border-b md:border-b-0 md:border-r border-slate-800' },
                 h('div', null,
                   h('div', { className: 'flex items-center gap-3 mb-6' },
@@ -822,7 +867,7 @@
                   ),
 
                   h('h3', { className: 'text-2xl font-bold font-display text-white mb-3 leading-tight' },
-                    'Create Free Student Account'
+                    'Create Your Developer Account'
                   ),
                   h('p', { className: 'text-xs text-slate-300 leading-relaxed mb-6' },
                     'Get immediate access to dispatch serverless tasks, generate vector PDF audits, and test chaos engineering.'
@@ -845,7 +890,6 @@
                 )
               ),
 
-              // Right Form Panel (7 cols) with Datacenter Background
               h('div', {
                 className: 'md:col-span-7 p-8 flex flex-col justify-center relative',
                 style: {
@@ -857,10 +901,9 @@
                 
                 h('div', { className: 'mb-5' },
                   h('h3', { className: 'text-xl font-bold font-display text-white' }, 'Register Account'),
-                  h('p', { className: 'text-xs text-slate-400' }, 'Create your developer account to begin')
+                  h('p', { className: 'text-xs text-slate-400' }, 'Create your profile to enter your personal dashboard')
                 ),
 
-                // Signup Form
                 h('form', { onSubmit: handleAuthSubmit, className: 'space-y-4' },
                   h('div', null,
                     h('label', { className: 'text-xs text-slate-300 font-semibold block mb-1' }, 'Full Name'),
@@ -869,7 +912,7 @@
                       required: true,
                       value: authName,
                       onChange: (e) => setAuthName(e.target.value),
-                      placeholder: 'e.g. Adeoluwa',
+                      placeholder: 'e.g. Alex Johnson',
                       className: 'w-full bg-slate-950/80 backdrop-blur-md border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-blue-500'
                     })
                   ),
@@ -881,7 +924,7 @@
                       required: true,
                       value: authEmail,
                       onChange: (e) => setAuthEmail(e.target.value),
-                      placeholder: 'student@university.edu',
+                      placeholder: 'developer@example.com',
                       className: 'w-full bg-slate-950/80 backdrop-blur-md border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-blue-500'
                     })
                   ),
@@ -901,7 +944,7 @@
                   h('button', {
                     type: 'submit',
                     className: 'btn-gradient w-full text-xs !py-3 font-bold mt-2'
-                  }, 'Create Free Account'),
+                  }, 'Create Account & Launch Dashboard ➔'),
 
                   h('div', { className: 'pt-2 text-center text-xs text-slate-400' },
                     'Already have an account? ',
@@ -918,12 +961,11 @@
         }
 
         // =========================================================================
-        // VIEW 3: PUBLIC LANDING PAGE (WITH NIGERIAN TECH HUB HERO SHOWCASE)
+        // VIEW 3: PUBLIC LANDING PAGE
         // =========================================================================
         if (currentPage === 'landing') {
           return h('div', { className: 'min-h-screen flex flex-col justify-between' },
             
-            // Header
             h('header', { className: 'sticky top-0 z-40 w-full border-b border-slate-800/80 bg-slate-950/85 backdrop-blur-xl px-4 lg:px-8 py-3.5' },
               h('div', { className: 'max-w-7xl mx-auto flex items-center justify-between' },
                 
@@ -949,7 +991,6 @@
               )
             ),
 
-            // Hero Section
             h('section', { className: 'py-16 md:py-20 px-4 max-w-6xl mx-auto text-center' },
               h('div', { className: 'inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-semibold mb-6' },
                 h(Icons.Sparkles, { className: 'w-3.5 h-3.5 text-cyan-400' }),
@@ -967,31 +1008,28 @@
                 h('button', {
                   onClick: handleDemoLogin,
                   className: 'btn-gradient text-xs !py-3 !px-6 shadow-xl shadow-blue-500/20'
-                }, h(Icons.Zap, { className: 'w-4 h-4' }), '1-Click Test Login as Lead Architect'),
+                }, h(Icons.Zap, { className: 'w-4 h-4' }), '1-Click Demo Login as Cloud Architect'),
 
                 h('button', {
                   onClick: () => setCurrentPage('signup'),
                   className: 'btn-secondary text-xs !py-3 !px-6'
-                }, h(Icons.User, { className: 'w-4 h-4 text-slate-300' }), 'Create Student Account')
+                }, h(Icons.User, { className: 'w-4 h-4 text-slate-300' }), 'Create Free Account')
               ),
 
-              // Nigerian Tech Hub Showcase Hero Banner
               h('div', { className: 'mt-12 relative rounded-2xl overflow-hidden glass-panel border-blue-500/30 shadow-2xl max-w-4xl mx-auto group' },
                 h('div', { className: 'relative h-64 sm:h-80 md:h-96 w-full overflow-hidden' },
                   h('img', {
                     src: '/assets/nigerian_tech_hub.jpg',
-                    alt: 'Nigerian Cloud Engineering Team in Lagos',
+                    alt: 'Cloud Engineering Team in Lagos',
                     className: 'w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out'
                   }),
                   h('div', { className: 'absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent' }),
                   
-                  // Top Live Hub Pill
                   h('div', { className: 'absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950/80 backdrop-blur-md border border-cyan-500/40 text-xs font-mono text-cyan-300' },
                     h(Icons.MapPin, { className: 'w-3.5 h-3.5 text-cyan-400' }),
                     h('span', null, 'Lagos Tech Hub • Node NG-LAG-01')
                   ),
 
-                  // Bottom Feature Pills
                   h('div', { className: 'absolute bottom-4 left-4 right-4 flex flex-wrap items-center justify-between gap-3 text-left' },
                     h('div', null,
                       h('span', { className: 'text-xs uppercase font-bold tracking-wider text-cyan-400 font-mono block' }, 'ENGINEERED FOR SCALE'),
@@ -1005,7 +1043,6 @@
                 )
               ),
 
-              // Architecture Flow Badge
               h('div', { className: 'mt-10 p-4 rounded-2xl glass-panel max-w-3xl mx-auto' },
                 h('span', { className: 'text-xs uppercase font-bold text-slate-400 tracking-wider block mb-3 flex items-center justify-center gap-1.5' },
                   h(Icons.Layers, { className: 'w-3.5 h-3.5 text-blue-400' }),
@@ -1031,7 +1068,6 @@
               )
             ),
 
-            // 3 Pillar Highlights
             h('section', { className: 'py-12 px-4 max-w-6xl mx-auto' },
               h('div', { className: 'grid grid-cols-1 md:grid-cols-3 gap-6' },
                 
@@ -1067,7 +1103,6 @@
               )
             ),
 
-            // Footer
             h('footer', { className: 'border-t border-slate-800/80 bg-slate-950/90 py-6 text-center text-xs text-slate-500' },
               'ServerlessFlow • Enterprise Distributed Task Processing Platform'
             )
@@ -1079,7 +1114,6 @@
         // =========================================================================
         return h('div', { className: 'min-h-screen flex flex-col justify-between' },
           
-          // Dashboard Header
           h('header', { className: 'sticky top-0 z-40 w-full border-b border-slate-800/80 bg-slate-950/85 backdrop-blur-xl px-4 lg:px-8 py-3' },
             h('div', { className: 'max-w-7xl mx-auto flex items-center justify-between gap-4' },
               
@@ -1094,7 +1128,6 @@
                 )
               ),
 
-              // Navigation Tabs
               h('div', { className: 'hidden md:flex items-center gap-1 p-1 rounded-xl glass-panel text-xs' },
                 [
                   { id: 'overview', label: 'Tasks & Telemetry', icon: Icons.Activity },
@@ -1110,7 +1143,6 @@
                 )
               ),
 
-              // User Actions & Profile
               h('div', { className: 'flex items-center gap-2.5' },
                 
                 h('button', {
@@ -1123,19 +1155,26 @@
                   className: 'px-2 py-1.5 rounded-lg text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-bounce flex items-center gap-1'
                 }, h(Icons.Shield, { className: 'w-3.5 h-3.5 text-amber-400' }), 'DLQ (' + dlq.length + ')'),
 
-                // User Profile Box
-                h('div', { className: 'flex items-center gap-2 p-1 pl-2.5 rounded-xl glass-panel' },
+                // User Profile Box (Clickable to Edit Profile & Change Avatar)
+                h('div', {
+                  onClick: () => setIsEditProfileOpen(true),
+                  title: 'Click to edit your profile & avatar',
+                  className: 'flex items-center gap-2 p-1 pl-2.5 rounded-xl glass-panel cursor-pointer hover:border-cyan-500/60 transition-colors group'
+                },
                   h('div', { className: 'text-left hidden lg:block' },
-                    h('span', { className: 'text-xs font-bold text-white block leading-tight' }, currentUser ? currentUser.name : 'Adeoluwa'),
+                    h('span', { className: 'text-xs font-bold text-white block leading-tight group-hover:text-cyan-300' }, currentUser ? currentUser.name : 'Cloud Engineer'),
                     h('span', { className: 'text-[10px] text-cyan-400 font-mono block' }, currentUser ? currentUser.role : 'Lead Architect')
                   ),
-                  h('img', {
-                    src: currentUser ? currentUser.avatar : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80',
-                    className: 'w-7 h-7 rounded-lg object-cover border border-cyan-500/30'
-                  }),
+                  h('div', { className: 'relative' },
+                    h('img', {
+                      src: currentUser ? currentUser.avatar : AVATAR_PRESETS[0],
+                      className: 'w-7 h-7 rounded-lg object-cover border border-cyan-500/40 group-hover:border-cyan-400'
+                    }),
+                    h('div', { className: 'absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-blue-600 rounded-full border border-slate-900 flex items-center justify-center text-[8px] text-white opacity-0 group-hover:opacity-100 transition-opacity' }, '✎')
+                  ),
                   h('button', {
-                    onClick: handleLogout,
-                    className: 'text-xs text-slate-400 hover:text-rose-400 px-1 py-0.5',
+                    onClick: (e) => { e.stopPropagation(); handleLogout(); },
+                    className: 'text-xs text-slate-400 hover:text-rose-400 px-1 py-0.5 ml-0.5',
                     title: 'Sign Out'
                   }, 'Sign Out')
                 )
@@ -1143,7 +1182,6 @@
             )
           ),
 
-          // Mobile Sub-tabs
           h('div', { className: 'md:hidden flex items-center justify-around border-b border-slate-800 bg-slate-950 px-2 py-2 text-xs font-bold' },
             [
               { id: 'overview', label: 'Pipeline', icon: Icons.Activity },
@@ -1159,10 +1197,8 @@
             )
           ),
 
-          // Main Dashboard
           h('main', { className: 'flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-6' },
             
-            // 4 Metrics Cards
             h('div', { className: 'grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6' },
               
               h('div', { className: 'glass-card p-4' },
@@ -1228,7 +1264,6 @@
               )
             ),
 
-            // Overview Tab
             dashboardTab === 'overview' && h('div', null,
               h('div', { className: 'glass-panel p-5 mb-6' },
                 h('div', { className: 'flex items-center justify-between pb-3 border-b border-slate-800 mb-4' },
@@ -1245,7 +1280,6 @@
 
               h('div', { className: 'grid grid-cols-1 lg:grid-cols-12 gap-6' },
                 
-                // Task Board
                 h('div', { className: 'lg:col-span-7 glass-panel p-4 sm:p-5' },
                   h('div', { className: 'flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800 mb-4' },
                     h('div', null,
@@ -1325,7 +1359,6 @@
                   )
                 ),
 
-                // Terminal Console
                 h('div', { className: 'lg:col-span-5 glass-panel p-4 sm:p-5' },
                   h('div', { className: 'flex items-center justify-between pb-3 border-b border-slate-800 mb-3 font-mono text-xs' },
                     h('span', { className: 'text-cyan-400 font-bold flex items-center gap-1.5' },
@@ -1357,7 +1390,6 @@
               )
             ),
 
-            // Workload Studio Tab
             dashboardTab === 'studio' && h('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-6' },
               h('div', { className: 'glass-panel p-6' },
                 h('h3', { className: 'text-base font-bold font-display text-white mb-1 flex items-center gap-2' },
@@ -1421,7 +1453,7 @@
                   'Custom PDF Report Compiler'
                 ),
                 h('p', { className: 'text-xs text-slate-400 mb-4' },
-                  'Generate formatted vector PDF documents with custom student and project metadata'
+                  'Generate formatted vector PDF documents with custom presenter and project metadata'
                 ),
 
                 h('div', { className: 'space-y-3 mb-4' },
@@ -1440,6 +1472,7 @@
                       type: 'text',
                       value: customPdfAuthor,
                       onChange: (e) => setCustomPdfAuthor(e.target.value),
+                      placeholder: currentUser ? currentUser.name : 'Enter your name',
                       className: 'w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500'
                     })
                   )
@@ -1451,7 +1484,7 @@
                       name: customPdfTitle || 'PDF Report',
                       type: 'pdf_generator',
                       priority: 'CRITICAL',
-                      payload: { title: customPdfTitle, author: customPdfAuthor }
+                      payload: { title: customPdfTitle, author: customPdfAuthor || (currentUser ? currentUser.name : 'Cloud Engineer') }
                     });
                     setDashboardTab('overview');
                   },
@@ -1460,7 +1493,6 @@
               )
             ),
 
-            // API Keys Tab
             dashboardTab === 'apikeys' && h('div', { className: 'max-w-3xl mx-auto glass-panel p-6' },
               h('h3', { className: 'text-base font-bold font-display text-white mb-1 flex items-center gap-2' },
                 h(Icons.Key, { className: 'w-5 h-5 text-cyan-400' }),
@@ -1500,7 +1532,6 @@
               )
             ),
 
-            // Chaos Lab Tab
             dashboardTab === 'chaos' && h('div', { className: 'max-w-3xl mx-auto glass-panel p-6' },
               h('h3', { className: 'text-base font-bold font-display text-white mb-1 flex items-center gap-2' },
                 h(Icons.Flask, { className: 'w-5 h-5 text-rose-400' }),
@@ -1537,9 +1568,71 @@
             )
           ),
 
-          // Footer
           h('footer', { className: 'border-t border-slate-800/80 bg-slate-950/90 py-4 text-center text-xs text-slate-500' },
             'ServerlessFlow • Enterprise Distributed Task Processing Platform'
+          ),
+
+          // ==================== EDIT PROFILE MODAL ====================
+          isEditProfileOpen && h('div', { className: 'fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn' },
+            h('div', { className: 'glass-panel p-6 w-full max-w-md border-cyan-500/40 relative' },
+              h('button', { onClick: () => setIsEditProfileOpen(false), className: 'absolute top-4 right-4 text-slate-400 hover:text-white' }, '✕'),
+              
+              h('div', { className: 'flex items-center gap-2 mb-4 pb-2 border-b border-slate-800' },
+                h(Icons.Edit, { className: 'w-4 h-4 text-cyan-400' }),
+                h('h3', { className: 'text-base font-bold font-display text-white' }, 'Edit User Profile & Avatar')
+              ),
+
+              h('form', { onSubmit: handleSaveProfile, className: 'space-y-4' },
+                h('div', null,
+                  h('label', { className: 'text-xs text-slate-300 font-semibold block mb-1' }, 'Full Name / Display Name'),
+                  h('input', {
+                    type: 'text',
+                    required: true,
+                    value: editProfileName,
+                    onChange: (e) => setEditProfileName(e.target.value),
+                    className: 'w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-cyan-500'
+                  })
+                ),
+
+                h('div', null,
+                  h('label', { className: 'text-xs text-slate-300 font-semibold block mb-1' }, 'Professional Role / Title'),
+                  h('input', {
+                    type: 'text',
+                    required: true,
+                    value: editProfileRole,
+                    onChange: (e) => setEditProfileRole(e.target.value),
+                    placeholder: 'e.g. Lead Cloud Architect',
+                    className: 'w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-cyan-500'
+                  })
+                ),
+
+                h('div', null,
+                  h('label', { className: 'text-xs text-slate-300 font-semibold block mb-2' }, 'Choose Avatar Icon:'),
+                  h('div', { className: 'grid grid-cols-6 gap-2' },
+                    AVATAR_PRESETS.map((avatarUrl, idx) =>
+                      h('img', {
+                        key: idx,
+                        src: avatarUrl,
+                        onClick: () => setEditProfileAvatar(avatarUrl),
+                        className: 'w-11 h-11 rounded-xl object-cover cursor-pointer border-2 transition-all ' + (editProfileAvatar === avatarUrl ? 'border-cyan-400 scale-105 shadow-md shadow-cyan-500/30' : 'border-slate-800 hover:border-slate-600')
+                      })
+                    )
+                  )
+                ),
+
+                h('div', { className: 'pt-2 flex items-center justify-end gap-2' },
+                  h('button', {
+                    type: 'button',
+                    onClick: () => setIsEditProfileOpen(false),
+                    className: 'btn-secondary text-xs !py-2'
+                  }, 'Cancel'),
+                  h('button', {
+                    type: 'submit',
+                    className: 'btn-gradient text-xs !py-2 !px-4'
+                  }, 'Save Profile Changes ✓')
+                )
+              )
+            )
           ),
 
           // Modals

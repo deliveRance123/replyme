@@ -376,21 +376,50 @@
         const [apiTestResponse, setApiTestResponse] = useState(null);
         const [isTestingApi, setIsTestingApi] = useState(false);
 
-        const [tasks, setTasks] = useState([]);
+        // Real-world zero metrics for new accounts
+        const [tasks, setTasks] = useState(() => {
+          try {
+            const saved = localStorage.getItem('serverless_tasks_' + (currentUser ? currentUser.id : 'guest'));
+            return saved ? JSON.parse(saved) : [];
+          } catch (e) { return []; }
+        });
+
         const [logs, setLogs] = useState([]);
         const [dlq, setDlq] = useState([]);
         const [chaosMode, setChaosMode] = useState(false);
         const [activeFilter, setActiveFilter] = useState('ALL');
-        const [metrics, setMetrics] = useState({
-          totalSubmitted: 0,
-          totalCompleted: 0,
-          totalFailed: 0,
-          avgLatencyMs: 140,
-          latencies: [120, 150, 95, 175, 130]
+
+        const [metrics, setMetrics] = useState(() => {
+          try {
+            const saved = localStorage.getItem('serverless_metrics_' + (currentUser ? currentUser.id : 'guest'));
+            return saved ? JSON.parse(saved) : {
+              totalSubmitted: 0,
+              totalCompleted: 0,
+              totalFailed: 0,
+              avgLatencyMs: 0,
+              latencies: []
+            };
+          } catch (e) {
+            return {
+              totalSubmitted: 0,
+              totalCompleted: 0,
+              totalFailed: 0,
+              avgLatencyMs: 0,
+              latencies: []
+            };
+          }
         });
 
         const chartRef = useRef(null);
         const chartInstance = useRef(null);
+
+        // Save tasks and metrics per user
+        useEffect(() => {
+          if (currentUser) {
+            localStorage.setItem('serverless_tasks_' + currentUser.id, JSON.stringify(tasks));
+            localStorage.setItem('serverless_metrics_' + currentUser.id, JSON.stringify(metrics));
+          }
+        }, [tasks, metrics, currentUser]);
 
         useEffect(() => {
           if (currentUser) {
@@ -400,24 +429,6 @@
             if (!customPdfAuthor) setCustomPdfAuthor(currentUser.name);
           }
         }, [currentUser]);
-
-        useEffect(() => {
-          handleDispatchTask({
-            name: 'Infrastructure Health Audit',
-            type: 'pdf_generator',
-            priority: 'HIGH',
-            payload: { title: 'Infrastructure Health Audit', author: currentUser ? currentUser.name : 'Cloud Engineer' }
-          });
-
-          setTimeout(() => {
-            handleDispatchTask({
-              name: 'Live Bitcoin & Ethereum Scraper',
-              type: 'data_scraper',
-              priority: 'MEDIUM',
-              payload: { symbol: 'BTC', records: 1250 }
-            });
-          }, 350);
-        }, []);
 
         useEffect(() => {
           if (!chartRef.current || !window.Chart || currentPage !== 'dashboard' || dashboardTab !== 'overview') return;
@@ -1193,7 +1204,7 @@
           // Main Workspace Area
           h('main', { className: 'flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-6' },
             
-            // 4 Metrics Cards
+            // 4 Metrics Cards (Dynamic Real-World Counts)
             h('div', { className: 'grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6' },
               h('div', { className: 'glass-card p-4' },
                 h('span', { className: 'text-[11px] font-semibold text-slate-400 uppercase tracking-wider block flex items-center gap-1' },
@@ -1220,7 +1231,7 @@
                   h('span', { className: 'text-xs text-indigo-400 font-mono' }, 'ms')
                 ),
                 h('div', { className: 'mt-2 text-[11px] text-slate-400 pt-1.5 border-t border-slate-800 flex justify-between' },
-                  h('span', null, 'Speed: ', h('strong', { className: 'text-emerald-400' }, 'Sub-Second')),
+                  h('span', null, 'Speed: ', h('strong', { className: 'text-emerald-400' }, metrics.totalSubmitted > 0 ? 'Sub-Second' : 'Ready')),
                   h('span', null, 'Cold Start: ', h('strong', { className: 'text-indigo-300' }, '<30ms'))
                 )
               ),
@@ -1232,7 +1243,7 @@
                 ),
                 h('div', { className: 'mt-1 flex items-baseline gap-2' },
                   h('span', { className: 'text-2xl font-bold font-display text-white' },
-                    metrics.totalSubmitted ? Math.round((metrics.totalCompleted / (metrics.totalCompleted + metrics.totalFailed || 1)) * 100) : 100, '%'
+                    metrics.totalSubmitted > 0 ? Math.round((metrics.totalCompleted / (metrics.totalCompleted + metrics.totalFailed || 1)) * 100) : 100, '%'
                   ),
                   h('span', { className: 'text-xs text-emerald-400 font-mono' }, 'healthy')
                 ),

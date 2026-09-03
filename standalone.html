@@ -1098,27 +1098,29 @@
         // =========================================================================
         return h('div', { className: 'min-h-screen flex flex-col justify-between' },
           
-          h('header', { className: 'sticky top-0 z-40 w-full border-b border-slate-800/80 bg-slate-950/85 backdrop-blur-xl px-4 lg:px-8 py-3' },
-            h('div', { className: 'max-w-7xl mx-auto flex items-center justify-between gap-4' },
+          // Dashboard Header (Fully Responsive on Mobile & Desktop)
+          h('header', { className: 'sticky top-0 z-40 w-full border-b border-slate-800/80 bg-slate-950/90 backdrop-blur-xl px-3 sm:px-4 lg:px-8 py-2.5 sm:py-3' },
+            h('div', { className: 'max-w-7xl mx-auto flex items-center justify-between gap-2' },
               
-              h('div', { className: 'flex items-center gap-3' },
-                h(Icons.Logo, { size: 'w-9 h-9' }),
+              // Logo & Brand
+              h('div', { className: 'flex items-center gap-2 sm:gap-3 shrink-0' },
+                h(Icons.Logo, { size: 'w-8 h-8 sm:w-9 h-9' }),
                 h('div', null,
-                  h('div', { className: 'flex items-center gap-2' },
-                    h('h1', { className: 'text-base font-bold font-display text-white tracking-tight' }, 'ServerlessFlow'),
-                    h('span', { className: 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 uppercase' }, 'User Portal')
+                  h('div', { className: 'flex items-center gap-1.5' },
+                    h('h1', { className: 'text-sm sm:text-base font-bold font-display text-white tracking-tight' }, 'ServerlessFlow'),
+                    h('span', { className: 'text-[9px] sm:text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 uppercase' }, 'Portal')
                   ),
-                  h('p', { className: 'text-[11px] text-slate-400 font-mono hidden sm:block' }, 'Workspace ID: ' + (currentUser ? currentUser.id : 'anon'))
+                  h('p', { className: 'text-[10px] text-slate-400 font-mono hidden md:block' }, 'Workspace: ' + (currentUser ? currentUser.id : 'anon'))
                 )
               ),
 
-              // Navigation Tabs
+              // Desktop Navigation Tabs (Hidden on mobile, shown on md+)
               h('div', { className: 'hidden md:flex items-center gap-1 p-1 rounded-xl glass-panel text-xs' },
                 [
-                  { id: 'studio', label: '🎨 Workload Studio', desc: 'Real Tools' },
-                  { id: 'overview', label: '📊 Tasks & Telemetry', desc: 'Live Logs' },
-                  { id: 'apikeys', label: '🔑 API & cURL', desc: 'REST Tester' },
-                  { id: 'chaos', label: '🧪 Resilience Lab', desc: 'Fault Injection' }
+                  { id: 'studio', label: '🎨 Workload Studio' },
+                  { id: 'overview', label: '📊 Tasks & Telemetry' },
+                  { id: 'apikeys', label: '🔑 API & cURL' },
+                  { id: 'chaos', label: '🧪 Resilience Lab' }
                 ].map(tab =>
                   h('button', {
                     key: tab.id,
@@ -1128,37 +1130,41 @@
                 )
               ),
 
-              h('div', { className: 'flex items-center gap-2.5' },
+              // Right Actions: Dispatch Button + Profile / Avatar
+              h('div', { className: 'flex items-center gap-2 sm:gap-2.5 shrink-0' },
+                
+                // Dispatch Button (Compact on mobile)
                 h('button', {
                   onClick: () => setIsSubmitModalOpen(true),
-                  className: 'btn-gradient text-xs !py-1.5 !px-3'
-                }, h(Icons.Zap, { className: 'w-3.5 h-3.5' }), '+ Dispatch Task'),
+                  className: 'btn-gradient text-xs !py-1.5 !px-2.5 sm:!px-3 whitespace-nowrap shadow-sm'
+                }, h(Icons.Zap, { className: 'w-3.5 h-3.5' }), h('span', { className: 'hidden xs:inline' }, 'Dispatch'), h('span', { className: 'xs:hidden' }, 'Task')),
 
+                // DLQ Badge if active
                 dlq.length > 0 && h('button', {
                   onClick: () => setIsDlqOpen(true),
                   className: 'px-2 py-1.5 rounded-lg text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-bounce flex items-center gap-1'
                 }, h(Icons.Shield, { className: 'w-3.5 h-3.5 text-amber-400' }), 'DLQ (' + dlq.length + ')'),
 
-                // User Profile Box
+                // User Profile Box (Touch friendly avatar)
                 h('div', {
                   onClick: () => setIsEditProfileOpen(true),
-                  title: 'Click to edit your profile & avatar',
-                  className: 'flex items-center gap-2 p-1 pl-2.5 rounded-xl glass-panel cursor-pointer hover:border-cyan-500/60 transition-colors group'
+                  title: 'Click to edit profile & avatar',
+                  className: 'flex items-center gap-1.5 sm:gap-2 p-1 pl-1.5 sm:pl-2.5 rounded-xl glass-panel cursor-pointer hover:border-cyan-500/60 transition-colors group'
                 },
                   h('div', { className: 'text-left hidden lg:block' },
-                    h('span', { className: 'text-xs font-bold text-white block leading-tight group-hover:text-cyan-300' }, currentUser ? currentUser.name : 'Cloud Engineer'),
-                    h('span', { className: 'text-[10px] text-cyan-400 font-mono block' }, currentUser ? currentUser.role : 'Lead Architect')
+                    h('span', { className: 'text-xs font-bold text-white block leading-tight group-hover:text-cyan-300 truncate max-w-[110px]' }, currentUser ? currentUser.name : 'Cloud Engineer'),
+                    h('span', { className: 'text-[10px] text-cyan-400 font-mono block truncate max-w-[110px]' }, currentUser ? currentUser.role : 'Lead Architect')
                   ),
-                  h('div', { className: 'relative' },
+                  h('div', { className: 'relative shrink-0' },
                     h('img', {
                       src: currentUser ? currentUser.avatar : '/assets/avatar_nigerian_male.jpg',
-                      className: 'w-7 h-7 rounded-lg object-cover border border-cyan-500/40 group-hover:border-cyan-400'
+                      className: 'w-7 h-7 sm:w-7 sm:h-7 rounded-lg object-cover border border-cyan-500/40 group-hover:border-cyan-400'
                     }),
-                    h('div', { className: 'absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-blue-600 rounded-full border border-slate-900 flex items-center justify-center text-[8px] text-white opacity-0 group-hover:opacity-100 transition-opacity' }, '✎')
+                    h('div', { className: 'absolute -bottom-1 -right-1 w-3 h-3 bg-blue-600 rounded-full border border-slate-900 flex items-center justify-center text-[7px] text-white' }, '✎')
                   ),
                   h('button', {
                     onClick: (e) => { e.stopPropagation(); handleLogout(); },
-                    className: 'text-xs text-slate-400 hover:text-rose-400 px-1 py-0.5 ml-0.5',
+                    className: 'text-[11px] sm:text-xs text-slate-400 hover:text-rose-400 px-1 py-0.5 ml-0.5 hidden sm:block',
                     title: 'Sign Out'
                   }, 'Sign Out')
                 )
@@ -1166,19 +1172,21 @@
             )
           ),
 
-          // Mobile Tabs
-          h('div', { className: 'md:hidden flex items-center justify-around border-b border-slate-800 bg-slate-950 px-2 py-2 text-xs font-bold' },
-            [
-              { id: 'studio', label: '🎨 Studio' },
-              { id: 'overview', label: '📊 Pipeline' },
-              { id: 'apikeys', label: '🔑 API' },
-              { id: 'chaos', label: '🧪 Lab' }
-            ].map(tab =>
-              h('button', {
-                key: tab.id,
-                onClick: () => setDashboardTab(tab.id),
-                className: 'px-2.5 py-1 rounded-lg flex items-center gap-1 ' + (dashboardTab === tab.id ? 'bg-blue-600 text-white' : 'text-slate-400')
-              }, tab.label)
+          // Mobile Navigation Sub-Bar (Clean, Evenly Spaced, Touch-Optimized)
+          h('div', { className: 'md:hidden border-b border-slate-800/80 bg-slate-950/95 px-2 py-1.5 overflow-x-auto scrollbar-none' },
+            h('div', { className: 'flex items-center justify-between min-w-[320px] gap-1' },
+              [
+                { id: 'studio', label: '🎨 Studio' },
+                { id: 'overview', label: '📊 Pipeline' },
+                { id: 'apikeys', label: '🔑 API' },
+                { id: 'chaos', label: '🧪 Lab' }
+              ].map(tab =>
+                h('button', {
+                  key: tab.id,
+                  onClick: () => setDashboardTab(tab.id),
+                  className: 'flex-1 text-center py-1.5 px-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap ' + (dashboardTab === tab.id ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-white bg-slate-900/60')
+                }, tab.label)
+              )
             )
           ),
 
